@@ -63,6 +63,9 @@ const debugTab = document.querySelector("#debug-tab");
 const debugLevelForm = document.querySelector("#debug-level-form");
 const debugLevelInput = document.querySelector("#debug-level-input");
 const debugStatus = document.querySelector("#debug-status");
+const secretCommandInput = document.querySelector(
+  "#secret-command-input",
+);
 const achievementList = document.querySelector("#achievement-list");
 const achievementSummary = document.querySelector("#achievement-summary");
 const achievementNotification = document.querySelector(
@@ -510,6 +513,15 @@ function jumpToCampaignLevel(event) {
   startLevelCountdown();
 }
 
+function handleSecretCommandInput() {
+  if (secretCommandInput.value.trim().toLowerCase() !== "/rise") {
+    return;
+  }
+
+  secretCommandInput.value = "";
+  unlockDebugPanel();
+}
+
 primaryAction.addEventListener("click", () => {
   if (state.lifecycle === "paused") {
     togglePause();
@@ -556,6 +568,7 @@ window.addEventListener("keydown", (event) => {
 });
 
 debugLevelForm.addEventListener("submit", jumpToCampaignLevel);
+secretCommandInput.addEventListener("input", handleSecretCommandInput);
 
 directionButtons.forEach((button) => {
   button.addEventListener("click", () => {

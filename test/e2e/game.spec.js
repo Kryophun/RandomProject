@@ -189,3 +189,20 @@ test("unlocks /rise and jumps to a debug campaign level", async ({ page }) => {
     ),
   ).toBeNull();
 });
+
+test("accepts /rise in the hidden bottom-left command box", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const commandInput = page.getByLabel("Command");
+
+  await expect(commandInput).toHaveCSS("opacity", "0.12");
+  await commandInput.fill("/rise");
+
+  await expect(page.getByRole("tab", { name: "Debug" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Debug" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(page.getByLabel("Campaign level")).toBeFocused();
+});

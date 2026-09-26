@@ -8,12 +8,16 @@ import {
   stepGame,
 } from "./game/engine.js";
 import { getTickInterval } from "./game/speed.js";
-import { directionForKey } from "./input/controls.js";
+import {
+  directionForKey,
+  directionForSwipe,
+} from "./input/controls.js";
 import { renderGame } from "./render/canvasRenderer.js";
 import { readHighScore, writeHighScore } from "./storage/highScore.js";
 
 const canvas = document.querySelector("#game-board");
 const context = canvas.getContext("2d");
+const boardWrap = document.querySelector("#board-wrap");
 const score = document.querySelector("#score");
 const highScoreDisplay = document.querySelector("#high-score");
 const overlay = document.querySelector("#game-overlay");
@@ -22,10 +26,12 @@ const modeSelector = document.querySelector("#mode-selector");
 const primaryAction = document.querySelector("#primary-action");
 const pauseAction = document.querySelector("#pause-action");
 const status = document.querySelector("#game-status");
+const directionButtons = document.querySelectorAll("[data-direction]");
 
 let state = createGameState();
 let timerId = null;
 let highScore = readHighScore();
+let pointerStart = null;
 
 function stopTimer() {
   if (timerId !== null) {
@@ -53,6 +59,20 @@ function updateInterface() {
   score.textContent = String(state.score);
   highScoreDisplay.textContent = String(highScore);
   renderGame(context, state);
+  canvas.dataset.lifecycle = state.lifecycle;
+  canvas.dataset.edgeMode = state.edgeMode;
+  canvas.dataset.direction = Object.entries(
+    {
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    },
+  ).find(([, direction]) =>
+    direction.x === state.direction.x && direction.y === state.direction.y
+  )?.[0] ?? "right";
+  canvas.dataset.head = `${state.snake[0].x},${state.snake[0].y}`;
+  canvas.dataset.score = String(state.score);
 
   const isReady = state.lifecycle === "ready";
   const isPaused = state.lifecycle === "paused";
@@ -66,19 +86,32 @@ function updateInterface() {
     message.textContent = "Use arrow keys or WASD to guide the snake.";
     primaryAction.textContent = "Start game";
     status.textContent = "Ready to play";
+    canvas.setAttribute("aria-label", "Snake board. Ready to play.");
   } else if (isPaused) {
     message.textContent = "Game paused";
     primaryAction.textContent = "Resume";
     status.textContent = "Game paused";
+    canvas.setAttribute(
+      "aria-label",
+      `Snake board paused at score ${state.score}.`,
+    );
   } else if (isGameOver) {
     message.textContent = state.completed
       ? `Board complete! Final score: ${state.score}`
       : `Game over. Final score: ${state.score}`;
     primaryAction.textContent = "Play again";
     status.textContent = state.completed ? "Board complete" : "Game over";
+    canvas.setAttribute(
+      "aria-label",
+      `${state.completed ? "Board complete" : "Game over"} at score ${state.score}.`,
+    );
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
     status.textContent = `${modeLabel} mode - speed ${state.speedTier + 1}`;
+    canvas.setAttribute(
+      "aria-label",
+      `Snake board in progress. Score ${state.score}. ${modeLabel} mode.`,
+    );
   }
 }
 
@@ -116,6 +149,23 @@ function togglePause() {
   updateInterface();
 }
 
+function issueDirection(direction) {
+  state = queueDirection(state, direction);
+  updateInterface();
+}
+
+function resizeCanvas() {
+  const bounds = canvas.getBoundingClientRect();
+  const pixelRatio = window.devicePixelRatio || 1;
+  const displaySize = Math.max(1, Math.round(bounds.width * pixelRatio));
+
+  if (canvas.width !== displaySize || canvas.height !== displaySize) {
+    canvas.width = displaySize;
+    canvas.height = displaySize;
+    updateInterface();
+  }
+}
+
 primaryAction.addEventListener("click", () => {
   if (state.lifecycle === "paused") {
     togglePause();
@@ -140,8 +190,46 @@ window.addEventListener("keydown", (event) => {
   }
 
   event.preventDefault();
-  state = queueDirection(state, direction);
-  updateInterface();
+  issueDirection(direction);
 });
 
+directionButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    issueDirection(button.dataset.direction);
+  });
+});
+
+canvas.addEventListener("pointerdown", (event) => {
+  if (state.lifecycle !== "running") {
+    return;
+  }
+
+  pointerStart = { x: event.clientX, y: event.clientY };
+  canvas.setPointerCapture?.(event.pointerId);
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  if (!pointerStart) {
+    return;
+  }
+
+  const direction = directionForSwipe(pointerStart, {
+    x: event.clientX,
+    y: event.clientY,
+  });
+  pointerStart = null;
+
+  if (direction) {
+    issueDirection(direction);
+  }
+});
+
+canvas.addEventListener("pointercancel", () => {
+  pointerStart = null;
+});
+
+const resizeObserver = new ResizeObserver(resizeCanvas);
+resizeObserver.observe(boardWrap);
+
 updateInterface();
+requestAnimationFrame(resizeCanvas);

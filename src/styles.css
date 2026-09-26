@@ -101,6 +101,7 @@ h1 {
   width: 100%;
   height: auto;
   aspect-ratio: 1;
+  touch-action: none;
 }
 
 .game-overlay {
@@ -239,6 +240,65 @@ h1 {
   outline-offset: 3px;
 }
 
+.direction-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 68px);
+  grid-template-rows: repeat(3, 52px);
+  justify-content: center;
+  gap: 8px;
+  margin: 0 auto 28px;
+}
+
+.direction-button {
+  border: 1px solid rgba(56, 102, 65, 0.2);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #386641;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 5px 14px rgba(56, 102, 65, 0.08);
+}
+
+.direction-button:hover {
+  background: #fff;
+}
+
+.direction-button:active {
+  transform: translateY(1px);
+}
+
+.direction-button:focus-visible {
+  outline: 3px solid #386641;
+  outline-offset: 3px;
+}
+
+.direction-up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.direction-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.direction-center {
+  grid-column: 2;
+  grid-row: 2;
+  border-radius: 50%;
+  background: rgba(56, 102, 65, 0.09);
+}
+
+.direction-right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.direction-down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
 .instructions {
   padding: 22px 24px;
   border: 1px solid rgba(56, 102, 65, 0.12);
@@ -264,6 +324,7 @@ h1 {
 
   .game-header {
     align-items: center;
+    gap: 12px;
   }
 
   .score-card {
@@ -274,5 +335,28 @@ h1 {
   .board-wrap {
     border-width: 5px;
     border-radius: 20px;
+  }
+
+  .game-toolbar {
+    justify-content: space-between;
+  }
+
+  .direction-controls {
+    grid-template-columns: repeat(3, minmax(60px, 74px));
+  }
+}
+
+@media (max-width: 390px) {
+  .score-group {
+    gap: 5px;
+  }
+
+  .score-card {
+    min-width: 60px;
+    padding-inline: 8px;
+  }
+
+  .score-card strong {
+    font-size: 1.4rem;
   }
 }

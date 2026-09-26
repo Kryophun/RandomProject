@@ -11,6 +11,7 @@ grid-based Snake games.
 - Progressive campaign mode with apple targets, strategic walls, enemies, and
   a temporary rainbow power-up
 - Persistent achievements with milestone icons and descriptions
+- Boss battles every five Campaign levels with apple-projectile combat
 - Increasing speed as the score grows
 - Pause and resume
 - Locally saved high score
@@ -52,6 +53,11 @@ stored locally in the browser and remain available after a reload.
   enemies; touching them while powered up defeats them for bonus points. Walls
   and the snake's own body remain dangerous. Obstacle layouts are different for
   each level while keeping all open board cells connected.
+- **Boss levels:** Levels 5, 10, 15, and every fifth level after that replace
+  normal enemies with a boss. Eat apples to gain shots, then press **F**,
+  **Enter**, or **Spit apple** to fire in the snake's current direction. Three
+  hits defeat the boss. Bosses cycle between pursuit, ranged, and charging
+  attack patterns.
 - **Walls:** Crossing a board edge ends the game.
 - **Wrap:** Crossing an edge continues from the opposite side.
 

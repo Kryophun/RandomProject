@@ -16,11 +16,19 @@ describe("campaign progression", () => {
       applesRequired: 3,
       wallCount: 6,
       enemyCount: 1,
+      bossLevel: false,
     });
     expect(getCampaignRequirements(5)).toEqual({
-      applesRequired: 11,
+      applesRequired: 0,
       wallCount: 22,
+      enemyCount: 0,
+      bossLevel: true,
+    });
+    expect(getCampaignRequirements(6)).toEqual({
+      applesRequired: 13,
+      wallCount: 26,
       enemyCount: 3,
+      bossLevel: false,
     });
   });
 

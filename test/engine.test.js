@@ -6,6 +6,7 @@ import {
   pauseGame,
   queueDirection,
   resumeGame,
+  spitApple,
   startGame,
   stepGame,
 } from "../src/game/engine.js";
@@ -50,6 +51,24 @@ describe("game state", () => {
     expect(state.snake).not.toContainEqual(state.fruit);
     expect(state.rainbowApple).not.toBeNull();
     expect(state.rainbowApple).not.toEqual(state.fruit);
+  });
+
+  it("creates a boss arena every fifth campaign level", () => {
+    const state = createGameState({
+      gameMode: "campaign",
+      level: 5,
+      random: () => 0,
+    });
+
+    expect(state.bossLevel).toBe(true);
+    expect(state.boss).toMatchObject({
+      type: "hunter",
+      hp: 3,
+      maxHp: 3,
+    });
+    expect(state.enemies).toHaveLength(0);
+    expect(state.rainbowApple).toBeNull();
+    expect(state.applesRequired).toBe(0);
   });
 });
 
@@ -343,6 +362,146 @@ describe("game updates", () => {
     expect(next.rainbowApplesEaten).toBe(1);
     expect(next.applesRequired).toBe(7);
     expect(next.walls.length).toBeGreaterThan(completed.walls.length);
+  });
+
+  it("turns boss-level apples into ammunition", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 5,
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      boss: {
+        x: 7,
+        y: 7,
+        type: "hunter",
+        name: "The Hunter",
+        hp: 3,
+        maxHp: 3,
+        direction: DIRECTIONS.left,
+      },
+      fruit: { x: 5, y: 4 },
+    };
+
+    const next = stepGame(state, () => 0);
+
+    expect(next.appleAmmo).toBe(1);
+    expect(next.totalApplesEaten).toBe(1);
+    expect(next.lifecycle).toBe("running");
+    expect(next.fruit).not.toBeNull();
+  });
+
+  it("fires an apple projectile in the snake's direction", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 5,
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      boss: {
+        x: 6,
+        y: 4,
+        type: "hunter",
+        name: "The Hunter",
+        hp: 3,
+        maxHp: 3,
+        direction: DIRECTIONS.left,
+      },
+      appleAmmo: 1,
+    };
+
+    const fired = spitApple(state);
+
+    expect(fired.appleAmmo).toBe(0);
+    expect(fired.appleProjectiles).toEqual([
+      {
+        x: 5,
+        y: 4,
+        direction: DIRECTIONS.right,
+      },
+    ]);
+
+    const turned = queueDirection(fired, "up");
+    const hit = stepGame(turned);
+    expect(hit.boss.hp).toBe(2);
+  });
+
+  it("completes a boss level after the third apple hit", () => {
+    let state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 5,
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      boss: {
+        x: 5,
+        y: 4,
+        type: "hunter",
+        name: "The Hunter",
+        hp: 3,
+        maxHp: 3,
+        direction: DIRECTIONS.left,
+      },
+    };
+
+    for (let hit = 0; hit < 3; hit += 1) {
+      state = spitApple({ ...state, appleAmmo: 1 });
+    }
+
+    expect(state.boss.hp).toBe(0);
+    expect(state.lifecycle).toBe("level-complete");
+    expect(state.bossesDefeated).toBe(1);
+  });
+
+  it("ends the game when a boss projectile reaches the snake", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 10,
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      bossProjectiles: [
+        {
+          x: 4,
+          y: 3,
+          direction: DIRECTIONS.down,
+        },
+      ],
+    };
+
+    expect(stepGame(state).lifecycle).toBe("game-over");
   });
 
   describe("game lifecycle", () => {

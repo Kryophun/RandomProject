@@ -11,6 +11,7 @@ import {
   pauseGame,
   queueDirection,
   resumeGame,
+  spitApple,
   startGame,
   stepGame,
 } from "./game/engine.js";
@@ -30,7 +31,17 @@ const highScoreDisplay = document.querySelector("#high-score");
 const campaignProgress = document.querySelector("#campaign-progress");
 const campaignLevel = document.querySelector("#campaign-level");
 const campaignApples = document.querySelector("#campaign-apples");
+const campaignApplesStatus = document.querySelector(
+  "#campaign-apples-status",
+);
 const campaignEnemies = document.querySelector("#campaign-enemies");
+const campaignEnemiesStatus = document.querySelector(
+  "#campaign-enemies-status",
+);
+const campaignBossStatus = document.querySelector("#campaign-boss-status");
+const campaignBossName = document.querySelector("#campaign-boss-name");
+const campaignBossHp = document.querySelector("#campaign-boss-hp");
+const campaignBossAmmo = document.querySelector("#campaign-boss-ammo");
 const campaignPower = document.querySelector("#campaign-power");
 const campaignPowerCount = document.querySelector("#campaign-power-count");
 const overlay = document.querySelector("#game-overlay");
@@ -39,6 +50,7 @@ const modeSelector = document.querySelector("#mode-selector");
 const gameModeSelector = document.querySelector("#game-mode-selector");
 const primaryAction = document.querySelector("#primary-action");
 const pauseAction = document.querySelector("#pause-action");
+const spitAction = document.querySelector("#spit-action");
 const status = document.querySelector("#game-status");
 const directionButtons = document.querySelectorAll("[data-direction]");
 const tabButtons = document.querySelectorAll("[data-tab]");
@@ -148,6 +160,9 @@ function updateInterface() {
   canvas.dataset.enemyCount = String(state.enemies?.length ?? 0);
   canvas.dataset.rainbowApple = state.rainbowApple ? "present" : "eaten";
   canvas.dataset.invincibility = String(state.invincibilityTicks ?? 0);
+  canvas.dataset.bossLevel = String(Boolean(state.bossLevel));
+  canvas.dataset.bossHp = String(state.boss?.hp ?? 0);
+  canvas.dataset.appleAmmo = String(state.appleAmmo ?? 0);
   canvas.dataset.direction = Object.entries(
     {
       up: { x: 0, y: -1 },
@@ -166,6 +181,7 @@ function updateInterface() {
   const isGameOver = state.lifecycle === "game-over";
   const isLevelComplete = state.lifecycle === "level-complete";
   const isCampaign = state.gameMode === "campaign";
+  const isBossLevel = Boolean(state.bossLevel);
   overlay.hidden = !isReady && !isPaused && !isGameOver && !isLevelComplete;
   modeSelector.hidden = isPaused || isLevelComplete;
   gameModeSelector.hidden = isPaused || isLevelComplete;
@@ -180,6 +196,19 @@ function updateInterface() {
   campaignPower.hidden = (state.invincibilityTicks ?? 0) <= 0;
   campaignPowerCount.textContent =
     `${state.invincibilityTicks ?? 0} moves`;
+  campaignApplesStatus.hidden = isBossLevel;
+  campaignEnemiesStatus.hidden = isBossLevel;
+  campaignBossStatus.hidden = !isBossLevel;
+  campaignBossName.textContent = state.boss?.name ?? "Defeated";
+  campaignBossHp.textContent =
+    `${Math.max(0, state.boss?.hp ?? 0)} / ${state.boss?.maxHp ?? 3}`;
+  campaignBossAmmo.textContent = String(state.appleAmmo ?? 0);
+  spitAction.hidden = !isBossLevel;
+  spitAction.disabled =
+    !isBossLevel ||
+    state.lifecycle !== "running" ||
+    (state.appleAmmo ?? 0) <= 0;
+  spitAction.textContent = `Spit apple (F) - ${state.appleAmmo ?? 0}`;
 
   if (isReady) {
     message.textContent = "Choose a game mode, then guide the snake to apples.";
@@ -195,7 +224,9 @@ function updateInterface() {
       `Snake board paused at score ${state.score}.`,
     );
   } else if (isLevelComplete) {
-    message.textContent = `Level ${state.level} complete! ${state.applesEaten} apples eaten.`;
+    message.textContent = isBossLevel
+      ? `${state.boss?.name ?? "Boss"} defeated!`
+      : `Level ${state.level} complete! ${state.applesEaten} apples eaten.`;
     primaryAction.textContent = `Start level ${state.level + 1}`;
     status.textContent = `Level ${state.level} complete`;
     canvas.setAttribute(
@@ -214,7 +245,9 @@ function updateInterface() {
     );
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
-    status.textContent = isCampaign
+    status.textContent = isBossLevel
+      ? `Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/3 - ${state.appleAmmo} apple shots`
+      : isCampaign
       ? `Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples${
           state.invincibilityTicks > 0
             ? ` - invincible for ${state.invincibilityTicks} moves`
@@ -225,7 +258,9 @@ function updateInterface() {
       "aria-label",
       `Snake board in progress. Score ${state.score}. ${
         isCampaign
-          ? `Campaign level ${state.level}, ${state.applesEaten} of ${state.applesRequired} apples, ${state.enemies?.length ?? 0} enemies active.${
+          ? isBossLevel
+            ? `Boss level ${state.level}. ${state.boss?.name} has ${state.boss?.hp} health. ${state.appleAmmo} apple shots available.`
+            : `Campaign level ${state.level}, ${state.applesEaten} of ${state.applesRequired} apples, ${state.enemies?.length ?? 0} enemies active.${
               state.invincibilityTicks > 0
                 ? ` Invincible for ${state.invincibilityTicks} moves.`
                 : ""
@@ -285,6 +320,22 @@ function issueDirection(direction) {
   updateInterface();
 }
 
+function fireApple() {
+  const nextState = spitApple(state);
+
+  if (nextState === state) {
+    return;
+  }
+
+  state = nextState;
+
+  if (state.lifecycle === "level-complete") {
+    stopTimer();
+  }
+
+  updateInterface();
+}
+
 function resizeCanvas() {
   const bounds = canvas.getBoundingClientRect();
   const pixelRatio = window.devicePixelRatio || 1;
@@ -325,6 +376,7 @@ primaryAction.addEventListener("click", () => {
 });
 
 pauseAction.addEventListener("click", togglePause);
+spitAction.addEventListener("click", fireApple);
 
 window.addEventListener("keydown", (event) => {
   if (gamePanel.hidden) {
@@ -334,6 +386,12 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
     event.preventDefault();
     togglePause();
+    return;
+  }
+
+  if (event.key === "Enter" || event.key === "f" || event.key === "F") {
+    event.preventDefault();
+    fireApple();
     return;
   }
 

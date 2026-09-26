@@ -1,3 +1,5 @@
+import { isBossLevel } from "./bosses.js";
+
 function positionKey({ x, y }) {
   return `${x},${y}`;
 }
@@ -97,16 +99,25 @@ function isOpenBoardConnected(gridSize, walls, start) {
 export function getCampaignRequirements(level, gridSize = 20) {
   const normalizedLevel = Math.max(1, Math.floor(level));
   const maximumWalls = Math.floor(gridSize * gridSize * 0.22);
+  const bossLevel = isBossLevel(normalizedLevel);
 
   return {
-    applesRequired: 3 + (normalizedLevel - 1) * 2,
+    applesRequired: bossLevel ? 0 : 3 + (normalizedLevel - 1) * 2,
     wallCount: Math.min(6 + (normalizedLevel - 1) * 4, maximumWalls),
-    enemyCount: Math.min(8, 1 + Math.floor((normalizedLevel - 1) / 2)),
+    enemyCount: bossLevel
+      ? 0
+      : Math.min(8, 1 + Math.floor((normalizedLevel - 1) / 2)),
+    bossLevel,
   };
 }
 
 export function createCampaignLevel(gridSize, level, snake) {
-  const { applesRequired, wallCount, enemyCount } = getCampaignRequirements(
+  const {
+    applesRequired,
+    wallCount,
+    enemyCount,
+    bossLevel,
+  } = getCampaignRequirements(
     level,
     gridSize,
   );
@@ -181,5 +192,5 @@ export function createCampaignLevel(gridSize, level, snake) {
     }
   }
 
-  return { applesRequired, enemyCount, walls };
+  return { applesRequired, enemyCount, bossLevel, walls };
 }

@@ -163,6 +163,25 @@ h1 {
   display: none;
 }
 
+.campaign-boss {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 10px;
+  background: rgba(159, 47, 70, 0.1);
+  color: #7b2338;
+}
+
+.campaign-boss[hidden] {
+  display: none;
+}
+
+.campaign-boss > span {
+  padding-left: 7px;
+  border-left: 1px solid rgba(159, 47, 70, 0.25);
+}
+
 .board-wrap {
   position: relative;
   overflow: hidden;
@@ -318,6 +337,11 @@ h1 {
 .secondary-action:focus-visible {
   outline: 3px solid #386641;
   outline-offset: 3px;
+}
+
+.spit-action {
+  border-color: rgba(159, 47, 70, 0.35);
+  color: #8f2d44;
 }
 
 .direction-controls {

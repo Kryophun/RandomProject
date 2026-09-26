@@ -9,6 +9,10 @@ const COLORS = Object.freeze({
   wallHighlight: "#9a8874",
   enemy: "#7d3b73",
   enemyEye: "#fff8ea",
+  boss: "#9f2f46",
+  bossAccent: "#f4b942",
+  bossProjectile: "#6d28d9",
+  appleProjectile: "#e45f4f",
 });
 
 function drawGrid(context, size, cellSize) {
@@ -170,6 +174,77 @@ function drawEnemy(context, enemy, cellSize) {
   }
 }
 
+function drawProjectile(context, projectile, cellSize, color, radius) {
+  context.fillStyle = color;
+  context.beginPath();
+  context.arc(
+    (projectile.x + 0.5) * cellSize,
+    (projectile.y + 0.5) * cellSize,
+    cellSize * radius,
+    0,
+    Math.PI * 2,
+  );
+  context.fill();
+}
+
+function drawBoss(context, boss, cellSize) {
+  if (!boss) {
+    return;
+  }
+
+  const centerX = (boss.x + 0.5) * cellSize;
+  const centerY = (boss.y + 0.5) * cellSize;
+  const radius = cellSize * 0.44;
+
+  context.fillStyle =
+    boss.type === "hunter"
+      ? "#9f2f46"
+      : boss.type === "turret"
+        ? "#6d3f9c"
+        : "#b45309";
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = COLORS.bossAccent;
+  context.beginPath();
+  context.moveTo(centerX - radius * 0.7, centerY - radius * 0.55);
+  context.lineTo(centerX - radius * 0.3, centerY - radius * 1.05);
+  context.lineTo(centerX - radius * 0.05, centerY - radius * 0.55);
+  context.fill();
+  context.beginPath();
+  context.moveTo(centerX + radius * 0.7, centerY - radius * 0.55);
+  context.lineTo(centerX + radius * 0.3, centerY - radius * 1.05);
+  context.lineTo(centerX + radius * 0.05, centerY - radius * 0.55);
+  context.fill();
+
+  context.fillStyle = COLORS.enemyEye;
+  for (const offset of [-cellSize * 0.13, cellSize * 0.13]) {
+    context.beginPath();
+    context.arc(
+      centerX + offset,
+      centerY - cellSize * 0.05,
+      cellSize * 0.075,
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+  }
+
+  const healthWidth = cellSize * 0.9;
+  const healthX = centerX - healthWidth / 2;
+  const healthY = centerY + radius + cellSize * 0.08;
+  context.fillStyle = "rgba(32, 48, 32, 0.35)";
+  context.fillRect(healthX, healthY, healthWidth, cellSize * 0.09);
+  context.fillStyle = "#ef4444";
+  context.fillRect(
+    healthX,
+    healthY,
+    healthWidth * Math.max(0, boss.hp / boss.maxHp),
+    cellSize * 0.09,
+  );
+}
+
 export function renderGame(context, state) {
   const { width, height } = context.canvas;
   const cellSize = width / state.gridSize;
@@ -182,6 +257,25 @@ export function renderGame(context, state) {
   drawFruit(context, state.fruit, cellSize);
   drawRainbowApple(context, state.rainbowApple, cellSize);
   state.enemies?.forEach((enemy) => drawEnemy(context, enemy, cellSize));
+  state.bossProjectiles?.forEach((projectile) =>
+    drawProjectile(
+      context,
+      projectile,
+      cellSize,
+      COLORS.bossProjectile,
+      0.16,
+    ),
+  );
+  state.appleProjectiles?.forEach((projectile) =>
+    drawProjectile(
+      context,
+      projectile,
+      cellSize,
+      COLORS.appleProjectile,
+      0.18,
+    ),
+  );
+  drawBoss(context, state.boss, cellSize);
 
   state.snake
     .slice()

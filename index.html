@@ -65,13 +65,23 @@
       >
         <div id="campaign-progress" class="campaign-progress" hidden>
           <strong>Level <span id="campaign-level">1</span></strong>
-          <span>
+          <span id="campaign-apples-status">
             Apples
             <strong id="campaign-apples">0 / 3</strong>
           </span>
-          <span>
+          <span id="campaign-enemies-status">
             Enemies
             <strong id="campaign-enemies">1 active</strong>
+          </span>
+          <span id="campaign-boss-status" class="campaign-boss" hidden>
+            Boss
+            <strong id="campaign-boss-name">The Hunter</strong>
+            <span>
+              HP <strong id="campaign-boss-hp">3 / 3</strong>
+            </span>
+            <span>
+              Ammo <strong id="campaign-boss-ammo">0</strong>
+            </span>
           </span>
           <span id="campaign-power" class="campaign-power" hidden>
             Rainbow
@@ -134,6 +144,15 @@
           >
             Pause
           </button>
+          <button
+            id="spit-action"
+            class="secondary-action spit-action"
+            type="button"
+            hidden
+            disabled
+          >
+            Spit apple (F)
+          </button>
         </div>
 
         <section class="direction-controls" aria-label="Direction controls">
@@ -182,6 +201,9 @@
             adds moving enemies and clustered stone walls. Eat the rainbow
             apple to become temporarily invincible against enemies and defeat
             them on contact. Walls and the snake's own body remain dangerous.
+            Every fifth Campaign level is a boss battle: eat apples for
+            ammunition, then press F, Enter, or the Spit apple button to hit
+            the boss three times.
           </p>
         </section>
       </section>

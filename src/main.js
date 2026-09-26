@@ -1,5 +1,11 @@
 import "./styles.css";
 import {
+  ACHIEVEMENTS,
+  evaluateAchievements,
+  readUnlockedAchievements,
+  writeUnlockedAchievements,
+} from "./achievements/achievements.js";
+import {
   advanceCampaignLevel,
   createGameState,
   pauseGame,
@@ -35,11 +41,21 @@ const primaryAction = document.querySelector("#primary-action");
 const pauseAction = document.querySelector("#pause-action");
 const status = document.querySelector("#game-status");
 const directionButtons = document.querySelectorAll("[data-direction]");
+const tabButtons = document.querySelectorAll("[data-tab]");
+const gamePanel = document.querySelector("#game-panel");
+const achievementsPanel = document.querySelector("#achievements-panel");
+const achievementList = document.querySelector("#achievement-list");
+const achievementSummary = document.querySelector("#achievement-summary");
+const achievementNotification = document.querySelector(
+  "#achievement-notification",
+);
 
 let state = createGameState();
 let timerId = null;
 let highScore = readHighScore();
 let pointerStart = null;
+let notificationTimerId = null;
+let unlockedAchievementIds = readUnlockedAchievements();
 
 function stopTimer() {
   if (timerId !== null) {
@@ -62,7 +78,64 @@ function updateHighScore() {
   writeHighScore(highScore);
 }
 
+function renderAchievements() {
+  const unlocked = new Set(unlockedAchievementIds);
+  const cards = ACHIEVEMENTS.map((achievement) => {
+    const card = document.createElement("article");
+    const icon = document.createElement("span");
+    const content = document.createElement("div");
+    const title = document.createElement("h3");
+    const description = document.createElement("p");
+    const stateLabel = document.createElement("span");
+    const isUnlocked = unlocked.has(achievement.id);
+
+    card.className = `achievement-card${isUnlocked ? " is-unlocked" : ""}`;
+    icon.className = "achievement-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = achievement.icon;
+    title.textContent = achievement.title;
+    description.textContent = achievement.description;
+    stateLabel.className = "achievement-state";
+    stateLabel.textContent = isUnlocked ? "Unlocked" : "Locked";
+    content.append(title, description);
+    card.append(icon, content, stateLabel);
+    return card;
+  });
+
+  achievementList.replaceChildren(...cards);
+  achievementSummary.textContent =
+    `${unlocked.size} of ${ACHIEVEMENTS.length} unlocked`;
+}
+
+function showAchievementNotification(achievement) {
+  if (notificationTimerId !== null) {
+    window.clearTimeout(notificationTimerId);
+  }
+
+  achievementNotification.textContent =
+    `${achievement.icon} Achievement unlocked: ${achievement.title}`;
+  achievementNotification.hidden = false;
+  notificationTimerId = window.setTimeout(() => {
+    achievementNotification.hidden = true;
+    notificationTimerId = null;
+  }, 4_000);
+}
+
+function updateAchievements() {
+  const result = evaluateAchievements(state, unlockedAchievementIds);
+
+  if (result.newlyUnlocked.length === 0) {
+    return;
+  }
+
+  unlockedAchievementIds = result.unlockedIds;
+  writeUnlockedAchievements(unlockedAchievementIds);
+  renderAchievements();
+  showAchievementNotification(result.newlyUnlocked.at(-1));
+}
+
 function updateInterface() {
+  updateAchievements();
   updateHighScore();
   score.textContent = String(state.score);
   highScoreDisplay.textContent = String(highScore);
@@ -224,6 +297,23 @@ function resizeCanvas() {
   }
 }
 
+function selectTab(tabName) {
+  if (tabName === "achievements" && state.lifecycle === "running") {
+    togglePause();
+  }
+
+  const showGame = tabName === "game";
+  gamePanel.hidden = !showGame;
+  achievementsPanel.hidden = showGame;
+
+  tabButtons.forEach((button) => {
+    button.setAttribute(
+      "aria-selected",
+      String(button.dataset.tab === tabName),
+    );
+  });
+}
+
 primaryAction.addEventListener("click", () => {
   if (state.lifecycle === "paused") {
     togglePause();
@@ -237,6 +327,10 @@ primaryAction.addEventListener("click", () => {
 pauseAction.addEventListener("click", togglePause);
 
 window.addEventListener("keydown", (event) => {
+  if (gamePanel.hidden) {
+    return;
+  }
+
   if (event.code === "Space") {
     event.preventDefault();
     togglePause();
@@ -256,6 +350,12 @@ window.addEventListener("keydown", (event) => {
 directionButtons.forEach((button) => {
   button.addEventListener("click", () => {
     issueDirection(button.dataset.direction);
+  });
+});
+
+tabButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    selectTab(button.dataset.tab);
   });
 });
 
@@ -291,5 +391,6 @@ canvas.addEventListener("pointercancel", () => {
 const resizeObserver = new ResizeObserver(resizeCanvas);
 resizeObserver.observe(boardWrap);
 
+renderAchievements();
 updateInterface();
 requestAnimationFrame(resizeCanvas);

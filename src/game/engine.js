@@ -44,6 +44,9 @@ export function createGameState({
   gameMode = "classic",
   level = 1,
   score = 0,
+  totalApplesEaten = 0,
+  enemiesDefeated = 0,
+  rainbowApplesEaten = 0,
 } = {}) {
   const snake = createInitialSnake(gridSize);
   const normalizedGameMode = gameMode === "campaign" ? "campaign" : "classic";
@@ -89,12 +92,14 @@ export function createGameState({
     gameMode: normalizedGameMode,
     level: Math.max(1, Math.floor(level)),
     applesEaten: 0,
+    totalApplesEaten,
     applesRequired: campaign.applesRequired,
     walls: campaign.walls,
     enemies,
-    enemiesDefeated: 0,
+    enemiesDefeated,
     enemyTick: 0,
     invincibilityTicks: 0,
+    rainbowApplesEaten,
     lifecycle,
     completed: false,
   };
@@ -151,6 +156,9 @@ export function advanceCampaignLevel(state, random = Math.random) {
     gameMode: "campaign",
     level: state.level + 1,
     score: state.score,
+    totalApplesEaten: state.totalApplesEaten,
+    enemiesDefeated: state.enemiesDefeated,
+    rainbowApplesEaten: state.rainbowApplesEaten,
   });
 }
 
@@ -235,6 +243,8 @@ export function stepGame(state, random = Math.random) {
   let fruit = state.fruit;
   let rainbowApple = state.rainbowApple ?? null;
   let applesEaten = state.applesEaten ?? 0;
+  let totalApplesEaten = state.totalApplesEaten ?? 0;
+  let rainbowApplesEaten = state.rainbowApplesEaten ?? 0;
   let lifecycle = "running";
   let invincibilityTicks = ateRainbow
     ? INVINCIBILITY_TICKS
@@ -243,6 +253,7 @@ export function stepGame(state, random = Math.random) {
   if (ateFruit) {
     score += 1;
     applesEaten += 1;
+    totalApplesEaten += 1;
 
     if (
       state.gameMode === "campaign" &&
@@ -264,6 +275,7 @@ export function stepGame(state, random = Math.random) {
     }
   } else if (ateRainbow) {
     score += 2;
+    rainbowApplesEaten += 1;
     rainbowApple = null;
   } else {
     snake.pop();
@@ -313,10 +325,12 @@ export function stepGame(state, random = Math.random) {
     rainbowApple,
     score,
     applesEaten,
+    totalApplesEaten,
     enemies,
     enemiesDefeated,
     enemyTick,
     invincibilityTicks,
+    rainbowApplesEaten,
     speedTier: getSpeedTier(score),
     completed,
     lifecycle: completed ? "game-over" : lifecycle,

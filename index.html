@@ -32,119 +32,184 @@
         </div>
       </header>
 
-      <div id="campaign-progress" class="campaign-progress" hidden>
-        <strong>Level <span id="campaign-level">1</span></strong>
-        <span>
-          Apples
-          <strong id="campaign-apples">0 / 3</strong>
-        </span>
-        <span>
-          Enemies
-          <strong id="campaign-enemies">1 active</strong>
-        </span>
-        <span id="campaign-power" class="campaign-power" hidden>
-          Rainbow
-          <strong id="campaign-power-count">0 moves</strong>
-        </span>
-      </div>
+      <nav class="tab-list" aria-label="Game sections" role="tablist">
+        <button
+          id="game-tab"
+          class="tab-button"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="game-panel"
+          data-tab="game"
+        >
+          Game
+        </button>
+        <button
+          id="achievements-tab"
+          class="tab-button"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="achievements-panel"
+          data-tab="achievements"
+        >
+          Achievements
+        </button>
+      </nav>
 
       <section
-        id="board-wrap"
-        class="board-wrap"
-        aria-label="Snake game board"
+        id="game-panel"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="game-tab"
       >
-        <canvas
-          id="game-board"
-          width="600"
-          height="600"
-          role="img"
-          aria-label="Snake board. Start a game to play."
-        ></canvas>
-        <div id="game-overlay" class="game-overlay">
-          <p id="game-message">Use arrow keys or WASD to guide the snake.</p>
-          <fieldset id="game-mode-selector" class="mode-selector setup-selector">
-            <legend>Game mode</legend>
-            <label>
-              <input type="radio" name="game-mode" value="classic" checked />
-              <span>Classic</span>
-            </label>
-            <label>
-              <input type="radio" name="game-mode" value="campaign" />
-              <span>Campaign</span>
-            </label>
-          </fieldset>
-          <fieldset id="mode-selector" class="mode-selector setup-selector">
-            <legend>Board edges</legend>
-            <label>
-              <input type="radio" name="edge-mode" value="walls" checked />
-              <span>Walls</span>
-            </label>
-            <label>
-              <input type="radio" name="edge-mode" value="wrap" />
-              <span>Wrap</span>
-            </label>
-          </fieldset>
-          <button id="primary-action" type="button">Start game</button>
+        <div id="campaign-progress" class="campaign-progress" hidden>
+          <strong>Level <span id="campaign-level">1</span></strong>
+          <span>
+            Apples
+            <strong id="campaign-apples">0 / 3</strong>
+          </span>
+          <span>
+            Enemies
+            <strong id="campaign-enemies">1 active</strong>
+          </span>
+          <span id="campaign-power" class="campaign-power" hidden>
+            Rainbow
+            <strong id="campaign-power-count">0 moves</strong>
+          </span>
         </div>
+
+        <section
+          id="board-wrap"
+          class="board-wrap"
+          aria-label="Snake game board"
+        >
+          <canvas
+            id="game-board"
+            width="600"
+            height="600"
+            role="img"
+            aria-label="Snake board. Start a game to play."
+          ></canvas>
+          <div id="game-overlay" class="game-overlay">
+            <p id="game-message">Use arrow keys or WASD to guide the snake.</p>
+            <fieldset
+              id="game-mode-selector"
+              class="mode-selector setup-selector"
+            >
+              <legend>Game mode</legend>
+              <label>
+                <input type="radio" name="game-mode" value="classic" checked />
+                <span>Classic</span>
+              </label>
+              <label>
+                <input type="radio" name="game-mode" value="campaign" />
+                <span>Campaign</span>
+              </label>
+            </fieldset>
+            <fieldset id="mode-selector" class="mode-selector setup-selector">
+              <legend>Board edges</legend>
+              <label>
+                <input type="radio" name="edge-mode" value="walls" checked />
+                <span>Walls</span>
+              </label>
+              <label>
+                <input type="radio" name="edge-mode" value="wrap" />
+                <span>Wrap</span>
+              </label>
+            </fieldset>
+            <button id="primary-action" type="button">Start game</button>
+          </div>
+        </section>
+
+        <div class="game-toolbar">
+          <p id="game-status" class="game-status" aria-live="polite">
+            Ready to play
+          </p>
+          <button
+            id="pause-action"
+            class="secondary-action"
+            type="button"
+            disabled
+          >
+            Pause
+          </button>
+        </div>
+
+        <section class="direction-controls" aria-label="Direction controls">
+          <button
+            class="direction-button direction-up"
+            type="button"
+            data-direction="up"
+            aria-label="Turn up"
+          >
+            <span aria-hidden="true">Up</span>
+          </button>
+          <button
+            class="direction-button direction-left"
+            type="button"
+            data-direction="left"
+            aria-label="Turn left"
+          >
+            <span aria-hidden="true">Left</span>
+          </button>
+          <div class="direction-center" aria-hidden="true"></div>
+          <button
+            class="direction-button direction-right"
+            type="button"
+            data-direction="right"
+            aria-label="Turn right"
+          >
+            <span aria-hidden="true">Right</span>
+          </button>
+          <button
+            class="direction-button direction-down"
+            type="button"
+            data-direction="down"
+            aria-label="Turn down"
+          >
+            <span aria-hidden="true">Down</span>
+          </button>
+        </section>
+
+        <section class="instructions" aria-label="How to play">
+          <h2>How to play</h2>
+          <p>
+            Eat the fruit to grow. Avoid your own tail. In Walls mode, avoid
+            the board edges; in Wrap mode, crossing an edge continues from the
+            opposite side. Use the arrow keys, WASD, direction buttons, or a
+            swipe across the board to turn. Press Space to pause. Campaign mode
+            adds moving enemies and clustered stone walls. Eat the rainbow
+            apple to become temporarily invincible against enemies and defeat
+            them on contact. Walls and the snake's own body remain dangerous.
+          </p>
+        </section>
       </section>
 
-      <div class="game-toolbar">
-        <p id="game-status" class="game-status" aria-live="polite">
-          Ready to play
-        </p>
-        <button id="pause-action" class="secondary-action" type="button" disabled>
-          Pause
-        </button>
-      </div>
-
-      <section class="direction-controls" aria-label="Direction controls">
-        <button
-          class="direction-button direction-up"
-          type="button"
-          data-direction="up"
-          aria-label="Turn up"
-        >
-          <span aria-hidden="true">Up</span>
-        </button>
-        <button
-          class="direction-button direction-left"
-          type="button"
-          data-direction="left"
-          aria-label="Turn left"
-        >
-          <span aria-hidden="true">Left</span>
-        </button>
-        <div class="direction-center" aria-hidden="true"></div>
-        <button
-          class="direction-button direction-right"
-          type="button"
-          data-direction="right"
-          aria-label="Turn right"
-        >
-          <span aria-hidden="true">Right</span>
-        </button>
-        <button
-          class="direction-button direction-down"
-          type="button"
-          data-direction="down"
-          aria-label="Turn down"
-        >
-          <span aria-hidden="true">Down</span>
-        </button>
+      <section
+        id="achievements-panel"
+        class="tab-panel achievements-panel"
+        role="tabpanel"
+        aria-labelledby="achievements-tab"
+        hidden
+      >
+        <div class="achievements-heading">
+          <div>
+            <p class="eyebrow">Milestones</p>
+            <h2>Achievements</h2>
+          </div>
+          <p id="achievement-summary">0 of 7 unlocked</p>
+        </div>
+        <div id="achievement-list" class="achievement-list"></div>
       </section>
 
-      <section class="instructions" aria-label="How to play">
-        <h2>How to play</h2>
-        <p>
-          Eat the fruit to grow. Avoid your own tail. In Walls mode, avoid the
-          board edges; in Wrap mode, crossing an edge continues from the
-          opposite side. Use the arrow keys, WASD, direction buttons, or a
-          swipe across the board to turn. Press Space to pause. Campaign mode
-          adds moving enemies and clustered stone walls. Eat the rainbow apple
-          to become temporarily invincible against enemies and defeat them on
-          contact. Walls and the snake's own body remain dangerous.
-        </p>
-      </section>
+      <div
+        id="achievement-notification"
+        class="achievement-notification"
+        role="status"
+        aria-live="polite"
+        hidden
+      ></div>
     </main>
 
     <script type="module" src="/src/main.js"></script>

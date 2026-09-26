@@ -95,3 +95,32 @@ test("starts a campaign with a target and obstacle layout", async ({ page }) => 
     "present",
   );
 });
+
+test("shows persistent achievement icons and descriptions", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "garden-snake-achievements",
+      JSON.stringify(["first-bite"]),
+    );
+  });
+  await page.reload();
+  await page.getByRole("tab", { name: "Achievements" }).click();
+
+  await expect(page.getByRole("heading", { name: "Achievements" })).toBeVisible();
+  await expect(page.locator("#achievement-summary")).toHaveText(
+    "1 of 7 unlocked",
+  );
+
+  const unlockedCard = page
+    .locator(".achievement-card")
+    .filter({ hasText: "First Bite" });
+  await expect(unlockedCard).toContainText("Eat your first apple.");
+  await expect(unlockedCard).toContainText("Unlocked");
+
+  const lockedCard = page
+    .locator(".achievement-card")
+    .filter({ hasText: "Campaign Champion" });
+  await expect(lockedCard).toContainText("Reach Level 5 in Campaign mode.");
+  await expect(lockedCard).toContainText("Locked");
+});

@@ -108,6 +108,7 @@ describe("game updates", () => {
     expect(next.snake).toHaveLength(4);
     expect(next.snake[0]).toEqual({ x: 5, y: 4 });
     expect(next.score).toBe(1);
+    expect(next.totalApplesEaten).toBe(1);
     expect(next.snake).not.toContainEqual(next.fruit);
   });
 
@@ -293,6 +294,7 @@ describe("game updates", () => {
     expect(next.invincibilityTicks).toBe(45);
     expect(next.score).toBe(2);
     expect(next.applesEaten).toBe(0);
+    expect(next.rainbowApplesEaten).toBe(1);
   });
 
   it("completes a campaign level after its required apple", () => {
@@ -319,7 +321,13 @@ describe("game updates", () => {
 
   it("advances to a harder campaign level while preserving score", () => {
     const completed = {
-      ...createGameState({ gameMode: "campaign", score: 7 }),
+      ...createGameState({
+        gameMode: "campaign",
+        score: 7,
+        totalApplesEaten: 9,
+        enemiesDefeated: 4,
+        rainbowApplesEaten: 1,
+      }),
       lifecycle: "level-complete",
       level: 2,
     };
@@ -330,6 +338,9 @@ describe("game updates", () => {
     expect(next.level).toBe(3);
     expect(next.score).toBe(7);
     expect(next.applesEaten).toBe(0);
+    expect(next.totalApplesEaten).toBe(9);
+    expect(next.enemiesDefeated).toBe(4);
+    expect(next.rainbowApplesEaten).toBe(1);
     expect(next.applesRequired).toBe(7);
     expect(next.walls.length).toBeGreaterThan(completed.walls.length);
   });

@@ -10,6 +10,7 @@ grid-based Snake games.
 - Walls and edge-wrapping modes selectable before each game
 - Progressive campaign mode with apple targets, strategic walls, enemies, and
   a temporary rainbow power-up
+- Persistent achievements with milestone icons and descriptions
 - Increasing speed as the score grows
 - Pause and resume
 - Locally saved high score
@@ -33,6 +34,13 @@ Open the local URL printed by Vite.
 - **Restart:** Use Play again after the game ends
 
 The snake cannot reverse directly into its own neck.
+
+## Achievements
+
+Open the **Achievements** tab to see every milestone and its locked or unlocked
+state. Achievements include eating apples, growing the snake, using the rainbow
+apple, defeating enemies, and reaching Campaign Levels 3 and 5. Unlocks are
+stored locally in the browser and remain available after a reload.
 
 ## Game modes
 

@@ -576,7 +576,7 @@ export function stepGame(state, random = Math.random) {
       );
     }
   } else if (ateRainbow) {
-    score += 2;
+    score += 2 + (state.upgrades?.rainbowScoreBonus ?? 0);
     rainbowApplesEaten += 1;
     rainbowApple = null;
   } else {
@@ -589,7 +589,10 @@ export function stepGame(state, random = Math.random) {
   if (
     lifecycle === "running" &&
     enemies.length > 0 &&
-    enemyTick % getEnemyMoveInterval(state.level) === 0
+    enemyTick %
+      (getEnemyMoveInterval(state.level) +
+        (state.upgrades?.enemyMoveIntervalBonus ?? 0)) ===
+      0
   ) {
     enemies = moveEnemies(enemies, {
       gridSize: state.gridSize,
@@ -638,6 +641,8 @@ export function stepGame(state, random = Math.random) {
         ...bossProjectiles,
       ].filter(Boolean),
       tick: bossTick,
+      speedMultiplier:
+        state.upgrades?.bossIntervalMultiplier ?? 1,
     });
     boss = bossAction.boss;
 

@@ -245,13 +245,21 @@ function renderUpgradeDetails() {
 
 function renderUpgradeTree() {
   const positions = new Map([
-    ["calm-roots", [50, 15]],
-    ["orchard-wisdom", [30, 48]],
-    ["boss-training", [70, 48]],
-    ["rainbow-reservoir", [12.5, 82]],
-    ["hunter-bounty", [37.5, 82]],
-    ["heavy-spit", [62.5, 82]],
-    ["deep-pockets", [87.5, 82]],
+    ["calm-roots", [50, 12]],
+    ["orchard-wisdom", [30, 34]],
+    ["boss-training", [70, 34]],
+    ["rainbow-reservoir", [12.5, 58]],
+    ["hunter-bounty", [37.5, 58]],
+    ["heavy-spit", [62.5, 58]],
+    ["deep-pockets", [87.5, 58]],
+    ["prismatic-heart", [6.25, 86]],
+    ["rainbow-windfall", [18.75, 86]],
+    ["royal-bounty", [31.25, 86]],
+    ["tangled-time", [43.75, 86]],
+    ["siege-apples", [56.25, 86]],
+    ["boss-hourglass", [68.75, 86]],
+    ["loaded-vault", [81.25, 86]],
+    ["endless-quiver", [93.75, 86]],
   ]);
   const nodes = UPGRADES.map((upgrade) => {
     const button = document.createElement("button");

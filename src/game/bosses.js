@@ -241,6 +241,7 @@ export function advanceBoss(
     enemies = [],
     protectedCells = [],
     tick,
+    speedMultiplier = 1,
   },
 ) {
   if (!boss) {
@@ -251,16 +252,18 @@ export function advanceBoss(
   const target = snake[0];
   let nextBoss = boss;
   let projectile = null;
+  const cadence = (base) =>
+    Math.max(1, Math.round(base * speedMultiplier));
 
-  if (boss.type === "hunter" && tick % 6 === 0) {
+  if (boss.type === "hunter" && tick % cadence(6) === 0) {
     nextBoss = moveToward(boss, target, gridSize, blocked);
   }
 
-  if (boss.type === "charger" && tick % 12 === 0) {
+  if (boss.type === "charger" && tick % cadence(12) === 0) {
     nextBoss = moveToward(boss, target, gridSize, blocked, 2);
   }
 
-  if (boss.type === "turret" && tick % 9 === 0) {
+  if (boss.type === "turret" && tick % cadence(9) === 0) {
     const [direction] = directionsToward(boss, target);
 
     projectile = direction
@@ -276,7 +279,7 @@ export function advanceBoss(
     boss.type === "hunter" ? 18 : boss.type === "turret" ? 16 : 20;
   const maxMinions = Math.min(4, 1 + Math.floor(boss.level / 10));
   const spawnedEnemy =
-    tick % spawnInterval === 0 && enemies.length < maxMinions
+    tick % cadence(spawnInterval) === 0 && enemies.length < maxMinions
       ? createSpawnedEnemy(nextBoss, {
           gridSize,
           walls,

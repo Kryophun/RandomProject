@@ -389,6 +389,63 @@ describe("game updates", () => {
     expect(stepGame(state).invincibilityTicks).toBe(65);
   });
 
+  it("applies the purchased rainbow score bonus", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          upgrades: { rainbowScoreBonus: 5 },
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [],
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 5, y: 4 },
+      score: 0,
+    };
+
+    expect(stepGame(state).score).toBe(7);
+  });
+
+  it("slows enemy movement with the purchased timing upgrade", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 10,
+          gameMode: "campaign",
+          upgrades: { enemyMoveIntervalBonus: 1 },
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [
+        {
+          id: "enemy",
+          x: 8,
+          y: 8,
+          pattern: "horizontal",
+          direction: DIRECTIONS.left,
+          directionIndex: 2,
+        },
+      ],
+      enemyTick: 2,
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 0, y: 1 },
+    };
+
+    expect(stepGame(state).enemies[0]).toMatchObject({ x: 8, y: 8 });
+  });
+
   it("completes a campaign level after its required apple", () => {
     const state = {
       ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),

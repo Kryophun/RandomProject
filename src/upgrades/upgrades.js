@@ -71,6 +71,86 @@ export const UPGRADES = Object.freeze([
     prerequisites: ["boss-training"],
     effects: Object.freeze({ bossAmmoBonus: 1 }),
   }),
+  Object.freeze({
+    id: "prismatic-heart",
+    icon: "💎",
+    title: "Prismatic Heart",
+    description: "Rainbow invincibility lasts 30 additional moves.",
+    cost: 180,
+    depth: 3,
+    prerequisites: ["rainbow-reservoir"],
+    effects: Object.freeze({ invincibilityBonus: 30 }),
+  }),
+  Object.freeze({
+    id: "rainbow-windfall",
+    icon: "✨",
+    title: "Rainbow Windfall",
+    description: "Rainbow apples grant five additional score points.",
+    cost: 200,
+    depth: 3,
+    prerequisites: ["rainbow-reservoir"],
+    effects: Object.freeze({ rainbowScoreBonus: 5 }),
+  }),
+  Object.freeze({
+    id: "royal-bounty",
+    icon: "👑",
+    title: "Royal Bounty",
+    description: "Defeated enemies grant two additional score points.",
+    cost: 210,
+    depth: 3,
+    prerequisites: ["hunter-bounty"],
+    effects: Object.freeze({ enemyScoreBonus: 2 }),
+  }),
+  Object.freeze({
+    id: "tangled-time",
+    icon: "🕸️",
+    title: "Tangled Time",
+    description: "Enemies wait one additional tick between moves.",
+    cost: 230,
+    depth: 3,
+    prerequisites: ["hunter-bounty"],
+    effects: Object.freeze({ enemyMoveIntervalBonus: 1 }),
+  }),
+  Object.freeze({
+    id: "siege-apples",
+    icon: "☄️",
+    title: "Siege Apples",
+    description: "Apple shots gain one more boss damage.",
+    cost: 240,
+    depth: 3,
+    prerequisites: ["heavy-spit"],
+    effects: Object.freeze({ bossDamageBonus: 1 }),
+  }),
+  Object.freeze({
+    id: "boss-hourglass",
+    icon: "⏳",
+    title: "Boss Hourglass",
+    description: "Boss attacks and minion summons are 50% slower.",
+    cost: 260,
+    depth: 3,
+    prerequisites: ["heavy-spit"],
+    effects: Object.freeze({ bossIntervalMultiplier: 0.5 }),
+  }),
+  Object.freeze({
+    id: "loaded-vault",
+    icon: "🧰",
+    title: "Loaded Vault",
+    description: "Start boss levels with two additional apple shots.",
+    cost: 250,
+    depth: 3,
+    prerequisites: ["deep-pockets"],
+    effects: Object.freeze({ startingBossAmmo: 2 }),
+  }),
+  Object.freeze({
+    id: "endless-quiver",
+    icon: "🏹",
+    title: "Endless Quiver",
+    description: "Boss-level apples load two additional shots.",
+    cost: 280,
+    depth: 3,
+    prerequisites: ["deep-pockets"],
+    effects: Object.freeze({ bossAmmoBonus: 2 }),
+  }),
 ]);
 
 const upgradeIds = new Set(UPGRADES.map((upgrade) => upgrade.id));
@@ -86,8 +166,12 @@ export function calculateRunUpgradePoints(state) {
     (state.bossesDefeated ?? 0) * 10 +
     (state.rainbowApplesEaten ?? 0) * 2;
   const levelModifier = 1 + (state.levelsCompleted ?? 0) / 10;
+  const milestoneModifier =
+    1 + Math.floor((state.levelsCompleted ?? 0) / 5) / 10;
 
-  return Math.floor(basePoints * levelModifier + Number.EPSILON);
+  return Math.floor(
+    basePoints * levelModifier * milestoneModifier + Number.EPSILON,
+  );
 }
 
 export function readUpgradeProgress(storage = globalThis.localStorage) {
@@ -153,6 +237,9 @@ export function getUpgradeEffects(purchasedIds = []) {
       enemyScoreBonus: 0,
       bossDamageBonus: 0,
       bossAmmoBonus: 0,
+      rainbowScoreBonus: 0,
+      enemyMoveIntervalBonus: 0,
+      bossIntervalMultiplier: 1,
     },
   );
 }

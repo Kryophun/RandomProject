@@ -20,13 +20,19 @@ describe("run upgrade points", () => {
         rainbowApplesEaten: 1,
         levelsCompleted: 10,
       }),
-    ).toBe(46);
+    ).toBe(55);
     expect(
       calculateRunUpgradePoints({
         totalApplesEaten: 10,
         levelsCompleted: 1,
       }),
     ).toBe(11);
+    expect(
+      calculateRunUpgradePoints({
+        totalApplesEaten: 10,
+        levelsCompleted: 5,
+      }),
+    ).toBe(16);
   });
 
   it("does not reward debug runs", () => {
@@ -68,12 +74,32 @@ describe("upgrade tree", () => {
         "calm-roots",
         "orchard-wisdom",
         "rainbow-reservoir",
+        "prismatic-heart",
+        "rainbow-windfall",
       ]),
     ).toMatchObject({
       tickIntervalMultiplier: 1.12,
       appleScoreBonus: 1,
-      invincibilityBonus: 20,
+      invincibilityBonus: 50,
+      rainbowScoreBonus: 5,
     });
+  });
+
+  it("unlocks two fourth-tier upgrades from a completed branch", () => {
+    const purchased = [
+      "calm-roots",
+      "orchard-wisdom",
+      "rainbow-reservoir",
+    ];
+    const prismaticHeart = UPGRADES.find(
+      ({ id }) => id === "prismatic-heart",
+    );
+    const rainbowWindfall = UPGRADES.find(
+      ({ id }) => id === "rainbow-windfall",
+    );
+
+    expect(isUpgradeAvailable(prismaticHeart, purchased)).toBe(true);
+    expect(isUpgradeAvailable(rainbowWindfall, purchased)).toBe(true);
   });
 
   it("rejects locked or unaffordable purchases", () => {

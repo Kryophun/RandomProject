@@ -52,12 +52,16 @@ Every completed non-debug run awards upgrade points:
 apples + (enemies x 3) + (bosses x 10) + (rainbow apples x 2)
 ```
 
-That subtotal is multiplied by `1 + (completed levels / 10)`, so completing
-Level 1 uses `1.1x` and completing Level 10 uses `2x`. Open the **Upgrades** tab
-to spend persistent points in a branching tree. Purchasing the root unlocks two
-branches, and each branch unlocks two stronger, more expensive upgrades.
-Purchased effects apply to normal and debug gameplay, but debug runs do not
-earn points.
+That subtotal is multiplied by `1 + (completed levels / 10)`. A second
+milestone multiplier is added every five completed levels:
+`1 + (floor(completed levels / 5) / 10)`. Completing Level 5 therefore uses
+`1.5x × 1.1x`, Level 10 uses `2x × 1.2x`, and Level 15 uses `2.5x × 1.3x`.
+
+Open the **Upgrades** tab to spend persistent points in a branching 15-node
+tree. Purchasing the root unlocks two branches, each branch unlocks two
+stronger upgrades, and those four upgrades each unlock two large fourth-tier
+abilities. Purchased effects apply to normal and debug gameplay, but debug runs
+do not earn points.
 
 ## Game modes
 

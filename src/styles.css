@@ -622,8 +622,8 @@ h1 {
 .upgrade-tree {
   position: relative;
   width: 100%;
-  min-width: 620px;
-  height: 520px;
+  min-width: 900px;
+  height: 700px;
 }
 
 .upgrade-connectors {

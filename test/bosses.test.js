@@ -145,4 +145,29 @@ describe("campaign bosses", () => {
 
     expect(capped.spawnedEnemy).toBeNull();
   });
+
+  it("applies the purchased boss slowdown multiplier", () => {
+    const boss = {
+      x: 2,
+      y: 2,
+      type: "hunter",
+      level: 5,
+      direction: { x: 1, y: 0 },
+    };
+    const waiting = advanceBoss(boss, {
+      gridSize: 10,
+      snake: [{ x: 8, y: 2 }],
+      tick: 6,
+      speedMultiplier: 1.5,
+    });
+    const moved = advanceBoss(boss, {
+      gridSize: 10,
+      snake: [{ x: 8, y: 2 }],
+      tick: 9,
+      speedMultiplier: 1.5,
+    });
+
+    expect(waiting.boss).toMatchObject({ x: 2, y: 2 });
+    expect(moved.boss).toMatchObject({ x: 3, y: 2 });
+  });
 });

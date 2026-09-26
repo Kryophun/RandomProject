@@ -7,6 +7,8 @@ const COLORS = Object.freeze({
   fruitLeaf: "#568f43",
   wall: "#786857",
   wallHighlight: "#9a8874",
+  enemy: "#7d3b73",
+  enemyEye: "#fff8ea",
 });
 
 function drawGrid(context, size, cellSize) {
@@ -27,16 +29,65 @@ function drawGrid(context, size, cellSize) {
   }
 }
 
-function drawSnakeSegment(context, segment, cellSize, isHead) {
+function drawSnakeSegment(
+  context,
+  segment,
+  cellSize,
+  isHead,
+  invincibleHue = null,
+) {
   const padding = cellSize * 0.1;
   const radius = cellSize * 0.22;
   const x = segment.x * cellSize + padding;
   const y = segment.y * cellSize + padding;
   const size = cellSize - padding * 2;
 
-  context.fillStyle = isHead ? COLORS.snakeHead : COLORS.snake;
+  context.fillStyle =
+    invincibleHue === null
+      ? isHead
+        ? COLORS.snakeHead
+        : COLORS.snake
+      : `hsl(${invincibleHue} 78% 48%)`;
   context.beginPath();
   context.roundRect(x, y, size, size, radius);
+  context.fill();
+}
+
+function drawRainbowApple(context, apple, cellSize) {
+  if (!apple) {
+    return;
+  }
+
+  const centerX = (apple.x + 0.5) * cellSize;
+  const centerY = (apple.y + 0.55) * cellSize;
+  const gradient = context.createLinearGradient(
+    centerX - cellSize * 0.3,
+    centerY - cellSize * 0.3,
+    centerX + cellSize * 0.3,
+    centerY + cellSize * 0.3,
+  );
+
+  gradient.addColorStop(0, "#ef4444");
+  gradient.addColorStop(0.2, "#f59e0b");
+  gradient.addColorStop(0.4, "#eab308");
+  gradient.addColorStop(0.6, "#22c55e");
+  gradient.addColorStop(0.8, "#3b82f6");
+  gradient.addColorStop(1, "#a855f7");
+
+  context.fillStyle = gradient;
+  context.beginPath();
+  context.arc(centerX, centerY, cellSize * 0.31, 0, Math.PI * 2);
+  context.fill();
+
+  context.fillStyle = "#f8fafc";
+  context.beginPath();
+  context.arc(
+    centerX - cellSize * 0.1,
+    centerY - cellSize * 0.12,
+    cellSize * 0.07,
+    0,
+    Math.PI * 2,
+  );
   context.fill();
 }
 
@@ -87,6 +138,38 @@ function drawWall(context, wall, cellSize) {
   );
 }
 
+function drawEnemy(context, enemy, cellSize) {
+  const centerX = (enemy.x + 0.5) * cellSize;
+  const centerY = (enemy.y + 0.5) * cellSize;
+  const radius = cellSize * 0.34;
+
+  context.fillStyle =
+    enemy.pattern === "horizontal"
+      ? "#9f3f64"
+      : enemy.pattern === "vertical"
+        ? "#6d4aae"
+        : COLORS.enemy;
+  context.beginPath();
+  context.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  context.fill();
+
+  const eyeOffsetX = cellSize * 0.12;
+  const eyeOffsetY = cellSize * 0.06;
+  context.fillStyle = COLORS.enemyEye;
+
+  for (const offset of [-eyeOffsetX, eyeOffsetX]) {
+    context.beginPath();
+    context.arc(
+      centerX + offset,
+      centerY - eyeOffsetY,
+      cellSize * 0.07,
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+  }
+}
+
 export function renderGame(context, state) {
   const { width, height } = context.canvas;
   const cellSize = width / state.gridSize;
@@ -97,12 +180,24 @@ export function renderGame(context, state) {
   drawGrid(context, state.gridSize, cellSize);
   state.walls?.forEach((wall) => drawWall(context, wall, cellSize));
   drawFruit(context, state.fruit, cellSize);
+  drawRainbowApple(context, state.rainbowApple, cellSize);
+  state.enemies?.forEach((enemy) => drawEnemy(context, enemy, cellSize));
 
   state.snake
     .slice()
     .reverse()
     .forEach((segment, reverseIndex) => {
       const isHead = reverseIndex === state.snake.length - 1;
-      drawSnakeSegment(context, segment, cellSize, isHead);
+      const invincibleHue =
+        state.invincibilityTicks > 0
+          ? (reverseIndex * 48 + state.enemyTick * 16) % 360
+          : null;
+      drawSnakeSegment(
+        context,
+        segment,
+        cellSize,
+        isHead,
+        invincibleHue,
+      );
     });
 }

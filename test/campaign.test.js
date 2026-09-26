@@ -15,10 +15,12 @@ describe("campaign progression", () => {
     expect(getCampaignRequirements(1)).toEqual({
       applesRequired: 3,
       wallCount: 6,
+      enemyCount: 1,
     });
     expect(getCampaignRequirements(5)).toEqual({
       applesRequired: 11,
       wallCount: 22,
+      enemyCount: 3,
     });
   });
 
@@ -41,6 +43,20 @@ describe("campaign progression", () => {
       expect(
         Math.abs(wall.x - snake[0].x) + Math.abs(wall.y - snake[0].y),
       ).toBeGreaterThan(3);
+    }
+  });
+
+  it("groups walls into formations instead of isolated cells", () => {
+    const level = createCampaignLevel(20, 6, snake);
+
+    for (const wall of level.walls) {
+      const hasNeighbor = level.walls.some(
+        (other) =>
+          other !== wall &&
+          Math.abs(other.x - wall.x) + Math.abs(other.y - wall.y) === 1,
+      );
+
+      expect(hasNeighbor).toBe(true);
     }
   });
 });

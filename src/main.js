@@ -24,6 +24,9 @@ const highScoreDisplay = document.querySelector("#high-score");
 const campaignProgress = document.querySelector("#campaign-progress");
 const campaignLevel = document.querySelector("#campaign-level");
 const campaignApples = document.querySelector("#campaign-apples");
+const campaignEnemies = document.querySelector("#campaign-enemies");
+const campaignPower = document.querySelector("#campaign-power");
+const campaignPowerCount = document.querySelector("#campaign-power-count");
 const overlay = document.querySelector("#game-overlay");
 const message = document.querySelector("#game-message");
 const modeSelector = document.querySelector("#mode-selector");
@@ -69,6 +72,9 @@ function updateInterface() {
   canvas.dataset.gameMode = state.gameMode;
   canvas.dataset.level = String(state.level);
   canvas.dataset.wallCount = String(state.walls?.length ?? 0);
+  canvas.dataset.enemyCount = String(state.enemies?.length ?? 0);
+  canvas.dataset.rainbowApple = state.rainbowApple ? "present" : "eaten";
+  canvas.dataset.invincibility = String(state.invincibilityTicks ?? 0);
   canvas.dataset.direction = Object.entries(
     {
       up: { x: 0, y: -1 },
@@ -95,6 +101,12 @@ function updateInterface() {
   campaignProgress.hidden = !isCampaign;
   campaignLevel.textContent = String(state.level);
   campaignApples.textContent = `${state.applesEaten} / ${state.applesRequired}`;
+  campaignEnemies.textContent =
+    `${state.enemies?.length ?? 0} active / ` +
+    `${state.enemiesDefeated ?? 0} defeated`;
+  campaignPower.hidden = (state.invincibilityTicks ?? 0) <= 0;
+  campaignPowerCount.textContent =
+    `${state.invincibilityTicks ?? 0} moves`;
 
   if (isReady) {
     message.textContent = "Choose a game mode, then guide the snake to apples.";
@@ -130,13 +142,21 @@ function updateInterface() {
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
     status.textContent = isCampaign
-      ? `Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples`
+      ? `Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples${
+          state.invincibilityTicks > 0
+            ? ` - invincible for ${state.invincibilityTicks} moves`
+            : ""
+        }`
       : `${modeLabel} mode - speed ${state.speedTier + 1}`;
     canvas.setAttribute(
       "aria-label",
       `Snake board in progress. Score ${state.score}. ${
         isCampaign
-          ? `Campaign level ${state.level}, ${state.applesEaten} of ${state.applesRequired} apples.`
+          ? `Campaign level ${state.level}, ${state.applesEaten} of ${state.applesRequired} apples, ${state.enemies?.length ?? 0} enemies active.${
+              state.invincibilityTicks > 0
+                ? ` Invincible for ${state.invincibilityTicks} moves.`
+                : ""
+            }`
           : `${modeLabel} mode.`
       }`,
     );

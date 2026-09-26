@@ -86,4 +86,12 @@ test("starts a campaign with a target and obstacle layout", async ({ page }) => 
     await page.locator("#game-board").getAttribute("data-wall-count"),
   );
   expect(wallCount).toBeGreaterThan(0);
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-enemy-count",
+    "1",
+  );
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-rainbow-apple",
+    "present",
+  );
 });

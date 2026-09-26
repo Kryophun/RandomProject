@@ -91,6 +91,7 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 20px;
   margin-bottom: 12px;
   padding: 10px 16px;
@@ -107,6 +108,23 @@ h1 {
 .campaign-progress > span {
   display: flex;
   gap: 6px;
+}
+
+.campaign-power {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(239, 68, 68, 0.18),
+    rgba(234, 179, 8, 0.18),
+    rgba(34, 197, 94, 0.18),
+    rgba(59, 130, 246, 0.18),
+    rgba(168, 85, 247, 0.18)
+  );
+}
+
+.campaign-power[hidden] {
+  display: none;
 }
 
 .board-wrap {

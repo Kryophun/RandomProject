@@ -44,8 +44,12 @@ describe("game state", () => {
     expect(state.level).toBe(1);
     expect(state.applesRequired).toBe(3);
     expect(state.walls).toHaveLength(6);
+    expect(state.enemies).toHaveLength(1);
     expect(state.walls).not.toContainEqual(state.fruit);
+    expect(state.enemies).not.toContainEqual(state.fruit);
     expect(state.snake).not.toContainEqual(state.fruit);
+    expect(state.rainbowApple).not.toBeNull();
+    expect(state.rainbowApple).not.toEqual(state.fruit);
   });
 });
 
@@ -178,6 +182,117 @@ describe("game updates", () => {
     };
 
     expect(stepGame(state).lifecycle).toBe("game-over");
+  });
+
+  it("ends the game when an unpowered snake hits an enemy", () => {
+    const state = {
+      ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [
+        {
+          id: "enemy",
+          x: 5,
+          y: 4,
+          pattern: "horizontal",
+          direction: DIRECTIONS.right,
+          directionIndex: 0,
+        },
+      ],
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 0, y: 1 },
+    };
+
+    expect(stepGame(state).lifecycle).toBe("game-over");
+  });
+
+  it("lets an invincible snake defeat an enemy for bonus points", () => {
+    const state = {
+      ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [
+        {
+          id: "enemy",
+          x: 5,
+          y: 4,
+          pattern: "horizontal",
+          direction: DIRECTIONS.right,
+          directionIndex: 0,
+        },
+      ],
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 0, y: 1 },
+      invincibilityTicks: 2,
+      score: 0,
+    };
+
+    const next = stepGame(state);
+
+    expect(next.lifecycle).toBe("running");
+    expect(next.enemies).toHaveLength(0);
+    expect(next.enemiesDefeated).toBe(1);
+    expect(next.score).toBe(2);
+    expect(next.invincibilityTicks).toBe(1);
+  });
+
+  it("ends the game when a moving enemy reaches the snake", () => {
+    const state = {
+      ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [
+        {
+          id: "enemy",
+          x: 6,
+          y: 4,
+          pattern: "horizontal",
+          direction: DIRECTIONS.left,
+          directionIndex: 2,
+        },
+      ],
+      enemyTick: 2,
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 0, y: 1 },
+    };
+
+    expect(stepGame(state).lifecycle).toBe("game-over");
+  });
+
+  it("activates invincibility and grows after eating a rainbow apple", () => {
+    const state = {
+      ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [],
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 5, y: 4 },
+      score: 0,
+    };
+
+    const next = stepGame(state);
+
+    expect(next.snake).toHaveLength(4);
+    expect(next.rainbowApple).toBeNull();
+    expect(next.invincibilityTicks).toBe(45);
+    expect(next.score).toBe(2);
+    expect(next.applesEaten).toBe(0);
   });
 
   it("completes a campaign level after its required apple", () => {

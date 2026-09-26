@@ -25,6 +25,37 @@ function shuffle(items, random) {
   return shuffled;
 }
 
+function createFormations(gridSize, level) {
+  const formations = [];
+  const barLength = Math.min(7, 3 + Math.floor(level / 3));
+
+  for (let y = 2; y < gridSize - 2; y += 2) {
+    for (let x = 2; x < gridSize - 2; x += 2) {
+      formations.push(
+        Array.from({ length: barLength }, (_, offset) => ({
+          x: x + offset,
+          y,
+        })),
+      );
+      formations.push(
+        Array.from({ length: barLength }, (_, offset) => ({
+          x,
+          y: y + offset,
+        })),
+      );
+      formations.push([
+        { x, y },
+        { x: x + 1, y },
+        { x: x + 2, y },
+        { x, y: y + 1 },
+        { x, y: y + 2 },
+      ]);
+    }
+  }
+
+  return formations;
+}
+
 function isOpenBoardConnected(gridSize, walls, start) {
   const blocked = new Set(walls.map(positionKey));
   const startKey = positionKey(start);
@@ -70,44 +101,85 @@ export function getCampaignRequirements(level, gridSize = 20) {
   return {
     applesRequired: 3 + (normalizedLevel - 1) * 2,
     wallCount: Math.min(6 + (normalizedLevel - 1) * 4, maximumWalls),
+    enemyCount: Math.min(8, 1 + Math.floor((normalizedLevel - 1) / 2)),
   };
 }
 
 export function createCampaignLevel(gridSize, level, snake) {
-  const { applesRequired, wallCount } = getCampaignRequirements(
+  const { applesRequired, wallCount, enemyCount } = getCampaignRequirements(
     level,
     gridSize,
   );
   const occupied = new Set(snake.map(positionKey));
   const head = snake[0];
-  const candidates = [];
+  const random = createSeededRandom(level * 104729 + gridSize * 8191);
+  const walls = [];
+  const wallKeys = new Set();
+  const isAllowed = (position) => {
+    const insideBoard =
+      position.x >= 1 &&
+      position.y >= 1 &&
+      position.x < gridSize - 1 &&
+      position.y < gridSize - 1;
+    const distanceFromHead =
+      Math.abs(position.x - head.x) + Math.abs(position.y - head.y);
 
-  for (let y = 0; y < gridSize; y += 1) {
-    for (let x = 0; x < gridSize; x += 1) {
-      const position = { x, y };
-      const distanceFromHead =
-        Math.abs(position.x - head.x) + Math.abs(position.y - head.y);
+    return (
+      insideBoard &&
+      distanceFromHead > 3 &&
+      !occupied.has(positionKey(position)) &&
+      !wallKeys.has(positionKey(position))
+    );
+  };
 
-      if (!occupied.has(positionKey(position)) && distanceFromHead > 3) {
-        candidates.push(position);
-      }
+  for (const formation of shuffle(createFormations(gridSize, level), random)) {
+    if (walls.length >= wallCount) {
+      break;
+    }
+
+    const available = formation
+      .filter(isAllowed)
+      .slice(0, wallCount - walls.length);
+
+    if (available.length < 2) {
+      continue;
+    }
+
+    const proposedWalls = [...walls, ...available];
+
+    if (!isOpenBoardConnected(gridSize, proposedWalls, head)) {
+      continue;
+    }
+
+    for (const wall of available) {
+      walls.push(wall);
+      wallKeys.add(positionKey(wall));
     }
   }
 
-  const random = createSeededRandom(level * 104729 + gridSize * 8191);
-  const walls = [];
+  const adjacentCandidates = [];
 
-  for (const candidate of shuffle(candidates, random)) {
-    if (walls.length >= wallCount) {
-      break;
+  for (const wall of walls) {
+    adjacentCandidates.push(
+      { x: wall.x + 1, y: wall.y },
+      { x: wall.x - 1, y: wall.y },
+      { x: wall.x, y: wall.y + 1 },
+      { x: wall.x, y: wall.y - 1 },
+    );
+  }
+
+  for (const candidate of shuffle(adjacentCandidates, random)) {
+    if (walls.length >= wallCount || !isAllowed(candidate)) {
+      continue;
     }
 
     const proposedWalls = [...walls, candidate];
 
     if (isOpenBoardConnected(gridSize, proposedWalls, head)) {
       walls.push(candidate);
+      wallKeys.add(positionKey(candidate));
     }
   }
 
-  return { applesRequired, walls };
+  return { applesRequired, enemyCount, walls };
 }

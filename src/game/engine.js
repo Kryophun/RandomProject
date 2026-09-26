@@ -1,8 +1,15 @@
 import { placeFruit } from "./fruit.js";
 import { getSpeedTier } from "./speed.js";
 import { createCampaignLevel } from "./campaign.js";
+import {
+  createCampaignEnemies,
+  getEnemyMoveInterval,
+  moveEnemies,
+} from "./enemies.js";
 
 export const GRID_SIZE = 20;
+export const INVINCIBILITY_TICKS = 45;
+const ENEMY_KILL_SCORE = 2;
 
 export const DIRECTIONS = Object.freeze({
   up: Object.freeze({ x: 0, y: -1 }),
@@ -43,14 +50,39 @@ export function createGameState({
   const campaign =
     normalizedGameMode === "campaign"
       ? createCampaignLevel(gridSize, level, snake)
-      : { applesRequired: 0, walls: [] };
+      : { applesRequired: 0, enemyCount: 0, walls: [] };
+  const enemies =
+    normalizedGameMode === "campaign"
+      ? createCampaignEnemies(
+          gridSize,
+          level,
+          campaign.enemyCount,
+          snake,
+          campaign.walls,
+        )
+      : [];
+  const occupiedByCampaign = [
+    ...campaign.walls,
+    ...enemies,
+  ];
+  const fruit = placeFruit(gridSize, snake, random, occupiedByCampaign);
+  const rainbowApple =
+    normalizedGameMode === "campaign"
+      ? placeFruit(
+          gridSize,
+          snake,
+          random,
+          [...occupiedByCampaign, fruit].filter(Boolean),
+        )
+      : null;
 
   return {
     gridSize,
     snake,
     direction: DIRECTIONS.right,
     queuedDirection: DIRECTIONS.right,
-    fruit: placeFruit(gridSize, snake, random, campaign.walls),
+    fruit,
+    rainbowApple,
     score,
     speedTier: getSpeedTier(score),
     edgeMode: edgeMode === "wrap" ? "wrap" : "walls",
@@ -59,6 +91,10 @@ export function createGameState({
     applesEaten: 0,
     applesRequired: campaign.applesRequired,
     walls: campaign.walls,
+    enemies,
+    enemiesDefeated: 0,
+    enemyTick: 0,
+    invincibilityTicks: 0,
     lifecycle,
     completed: false,
   };
@@ -152,8 +188,11 @@ export function stepGame(state, random = Math.random) {
     };
   }
 
-  const ateFruit = positionsMatch(nextHead, state.fruit);
-  const collisionSegments = ateFruit
+  const ateFruit = state.fruit && positionsMatch(nextHead, state.fruit);
+  const ateRainbow =
+    state.rainbowApple && positionsMatch(nextHead, state.rainbowApple);
+  const ateApple = ateFruit || ateRainbow;
+  const collisionSegments = ateApple
     ? state.snake
     : state.snake.slice(0, -1);
   const hitSnake = collisionSegments.some((segment) =>
@@ -172,11 +211,34 @@ export function stepGame(state, random = Math.random) {
     };
   }
 
+  let enemies = state.enemies ?? [];
+  let enemiesDefeated = state.enemiesDefeated ?? 0;
+  let score = state.score;
+  const headEnemy = enemies.find((enemy) => positionsMatch(enemy, nextHead));
+
+  if (headEnemy) {
+    if ((state.invincibilityTicks ?? 0) <= 0) {
+      return {
+        ...state,
+        direction,
+        queuedDirection: direction,
+        lifecycle: "game-over",
+      };
+    }
+
+    enemies = enemies.filter((enemy) => enemy.id !== headEnemy.id);
+    enemiesDefeated += 1;
+    score += ENEMY_KILL_SCORE;
+  }
+
   const snake = [nextHead, ...state.snake];
   let fruit = state.fruit;
-  let score = state.score;
+  let rainbowApple = state.rainbowApple ?? null;
   let applesEaten = state.applesEaten ?? 0;
   let lifecycle = "running";
+  let invincibilityTicks = ateRainbow
+    ? INVINCIBILITY_TICKS
+    : Math.max(0, (state.invincibilityTicks ?? 0) - 1);
 
   if (ateFruit) {
     score += 1;
@@ -189,13 +251,58 @@ export function stepGame(state, random = Math.random) {
       fruit = null;
       lifecycle = "level-complete";
     } else {
-      fruit = placeFruit(state.gridSize, snake, random, state.walls);
+      fruit = placeFruit(
+        state.gridSize,
+        snake,
+        random,
+        [
+          ...(state.walls ?? []),
+          ...enemies,
+          rainbowApple,
+        ].filter(Boolean),
+      );
     }
+  } else if (ateRainbow) {
+    score += 2;
+    rainbowApple = null;
   } else {
     snake.pop();
   }
 
   const completed = fruit === null && lifecycle !== "level-complete";
+  let enemyTick = (state.enemyTick ?? 0) + 1;
+
+  if (
+    lifecycle === "running" &&
+    enemies.length > 0 &&
+    enemyTick % getEnemyMoveInterval(state.level) === 0
+  ) {
+    enemies = moveEnemies(enemies, {
+      gridSize: state.gridSize,
+      walls: state.walls,
+      protectedCells: [fruit, rainbowApple].filter(Boolean),
+    });
+
+    const collidingEnemyIds = new Set(
+      enemies
+        .filter((enemy) =>
+          snake.some((segment) => positionsMatch(segment, enemy)),
+        )
+        .map((enemy) => enemy.id),
+    );
+
+    if (collidingEnemyIds.size > 0) {
+      if (invincibilityTicks <= 0) {
+        lifecycle = "game-over";
+      } else {
+        enemies = enemies.filter(
+          (enemy) => !collidingEnemyIds.has(enemy.id),
+        );
+        enemiesDefeated += collidingEnemyIds.size;
+        score += collidingEnemyIds.size * ENEMY_KILL_SCORE;
+      }
+    }
+  }
 
   return {
     ...state,
@@ -203,8 +310,13 @@ export function stepGame(state, random = Math.random) {
     direction,
     queuedDirection: direction,
     fruit,
+    rainbowApple,
     score,
     applesEaten,
+    enemies,
+    enemiesDefeated,
+    enemyTick,
+    invincibilityTicks,
     speedTier: getSpeedTier(score),
     completed,
     lifecycle: completed ? "game-over" : lifecycle,

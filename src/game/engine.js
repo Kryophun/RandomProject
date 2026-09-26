@@ -8,7 +8,9 @@ import {
 } from "./enemies.js";
 import {
   advanceBoss,
+  bossOccupiesPosition,
   createCampaignBoss,
+  getBossCells,
 } from "./bosses.js";
 
 export const GRID_SIZE = 20;
@@ -82,7 +84,7 @@ export function createGameState({
   const occupiedByCampaign = [
     ...campaign.walls,
     ...enemies,
-    boss,
+    ...getBossCells(boss),
   ].filter(Boolean);
   const fruit = placeFruit(gridSize, snake, random, occupiedByCampaign);
   const rainbowApple =
@@ -271,7 +273,7 @@ function advanceProjectiles(state) {
       enemies = enemies.filter((enemy) => enemy.id !== hitEnemy.id);
       enemiesDefeated += 1;
       score += ENEMY_KILL_SCORE;
-    } else if (boss && positionsMatch(next, boss)) {
+    } else if (boss && bossOccupiesPosition(boss, next)) {
       boss = { ...boss, hp: boss.hp - 1 };
       score += 2;
 
@@ -376,7 +378,7 @@ export function spitApple(state) {
     };
   }
 
-  if (positionsMatch(next, state.boss)) {
+  if (bossOccupiesPosition(state.boss, next)) {
     const boss = { ...state.boss, hp: state.boss.hp - 1 };
     const defeated = boss.hp <= 0;
 
@@ -455,7 +457,8 @@ export function stepGame(state, random = Math.random) {
   const hitObstacle = state.walls?.some((wall) =>
     positionsMatch(wall, nextHead),
   );
-  const hitBoss = state.boss && positionsMatch(state.boss, nextHead);
+  const hitBoss =
+    state.boss && bossOccupiesPosition(state.boss, nextHead);
 
   if (hitSnake || hitObstacle || hitBoss) {
     return {
@@ -515,7 +518,7 @@ export function stepGame(state, random = Math.random) {
         [
           ...(state.walls ?? []),
           ...enemies,
-          boss,
+          ...getBossCells(boss),
           rainbowApple,
         ].filter(Boolean),
       );
@@ -556,7 +559,11 @@ export function stepGame(state, random = Math.random) {
     enemies = moveEnemies(enemies, {
       gridSize: state.gridSize,
       walls: state.walls,
-      protectedCells: [fruit, rainbowApple, boss].filter(Boolean),
+      protectedCells: [
+        fruit,
+        rainbowApple,
+        ...getBossCells(boss),
+      ].filter(Boolean),
     });
 
     const collidingEnemyIds = new Set(
@@ -607,7 +614,7 @@ export function stepGame(state, random = Math.random) {
       enemies = [...enemies, bossAction.spawnedEnemy];
     }
 
-    if (snake.some((segment) => positionsMatch(segment, boss))) {
+    if (snake.some((segment) => bossOccupiesPosition(boss, segment))) {
       lifecycle = "game-over";
     }
   }

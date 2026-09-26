@@ -27,6 +27,43 @@ function isBlocked(position, gridSize, blocked) {
   );
 }
 
+export function getBossCells(boss) {
+  if (!boss) {
+    return [];
+  }
+
+  const hitRadius = boss.hitRadius ?? 1;
+  const cells = [];
+
+  for (let yOffset = -hitRadius; yOffset <= hitRadius; yOffset += 1) {
+    for (let xOffset = -hitRadius; xOffset <= hitRadius; xOffset += 1) {
+      cells.push({
+        x: boss.x + xOffset,
+        y: boss.y + yOffset,
+      });
+    }
+  }
+
+  return cells;
+}
+
+export function bossOccupiesPosition(boss, position) {
+  return getBossCells(boss).some(
+    (cell) => cell.x === position.x && cell.y === position.y,
+  );
+}
+
+function isBossCenterBlocked(position, boss, gridSize, blocked) {
+  return getBossCells({ ...boss, ...position }).some(
+    (cell) =>
+      cell.x < 0 ||
+      cell.y < 0 ||
+      cell.x >= gridSize ||
+      cell.y >= gridSize ||
+      blocked.has(positionKey(cell)),
+  );
+}
+
 function directionsToward(from, to) {
   const horizontal = {
     x: Math.sign(to.x - from.x),
@@ -56,7 +93,12 @@ function moveToward(boss, target, gridSize, blocked, distance = 1) {
         x: moved.x + candidate.x,
         y: moved.y + candidate.y,
       };
-      return !isBlocked(proposed, gridSize, blocked);
+      return !isBossCenterBlocked(
+        proposed,
+        moved,
+        gridSize,
+        blocked,
+      );
     });
 
     if (!direction) {
@@ -91,18 +133,18 @@ function createSpawnedEnemy(
       ...snake,
       ...enemies,
       ...protectedCells,
-      boss,
+      ...getBossCells(boss),
     ].map(positionKey),
   );
   const offsets = [
-    { x: 1, y: 0 },
-    { x: 0, y: 1 },
-    { x: -1, y: 0 },
-    { x: 0, y: -1 },
     { x: 2, y: 0 },
     { x: 0, y: 2 },
     { x: -2, y: 0 },
     { x: 0, y: -2 },
+    { x: 3, y: 0 },
+    { x: 0, y: 3 },
+    { x: -3, y: 0 },
+    { x: 0, y: -3 },
   ];
   const startIndex = tick % offsets.length;
 
@@ -155,7 +197,14 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
     for (let x = 0; x < gridSize; x += 1) {
       const position = { x, y };
 
-      if (!blocked.has(positionKey(position))) {
+      if (
+        !isBossCenterBlocked(
+          position,
+          { hitRadius: 1 },
+          gridSize,
+          blocked,
+        )
+      ) {
         candidates.push({
           ...position,
           distance:
@@ -177,6 +226,7 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
     y: spawn.y,
     hp: 3,
     maxHp: 3,
+    hitRadius: 1,
     level,
     direction: { x: -1, y: 0 },
   };
@@ -202,15 +252,15 @@ export function advanceBoss(
   let nextBoss = boss;
   let projectile = null;
 
-  if (boss.type === "hunter" && tick % 4 === 0) {
+  if (boss.type === "hunter" && tick % 6 === 0) {
     nextBoss = moveToward(boss, target, gridSize, blocked);
   }
 
-  if (boss.type === "charger" && tick % 8 === 0) {
+  if (boss.type === "charger" && tick % 12 === 0) {
     nextBoss = moveToward(boss, target, gridSize, blocked, 2);
   }
 
-  if (boss.type === "turret" && tick % 6 === 0) {
+  if (boss.type === "turret" && tick % 9 === 0) {
     const [direction] = directionsToward(boss, target);
 
     projectile = direction
@@ -223,7 +273,7 @@ export function advanceBoss(
   }
 
   const spawnInterval =
-    boss.type === "hunter" ? 12 : boss.type === "turret" ? 10 : 14;
+    boss.type === "hunter" ? 18 : boss.type === "turret" ? 16 : 20;
   const maxMinions = Math.min(4, 1 + Math.floor(boss.level / 10));
   const spawnedEnemy =
     tick % spawnInterval === 0 && enemies.length < maxMinions

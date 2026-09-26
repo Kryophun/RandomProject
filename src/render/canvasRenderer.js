@@ -194,7 +194,7 @@ function drawBoss(context, boss, cellSize) {
 
   const centerX = (boss.x + 0.5) * cellSize;
   const centerY = (boss.y + 0.5) * cellSize;
-  const radius = cellSize * 0.44;
+  const radius = cellSize * 0.92;
 
   context.fillStyle =
     boss.type === "hunter"
@@ -219,29 +219,29 @@ function drawBoss(context, boss, cellSize) {
   context.fill();
 
   context.fillStyle = COLORS.enemyEye;
-  for (const offset of [-cellSize * 0.13, cellSize * 0.13]) {
+  for (const offset of [-cellSize * 0.28, cellSize * 0.28]) {
     context.beginPath();
     context.arc(
       centerX + offset,
-      centerY - cellSize * 0.05,
-      cellSize * 0.075,
+      centerY - cellSize * 0.1,
+      cellSize * 0.13,
       0,
       Math.PI * 2,
     );
     context.fill();
   }
 
-  const healthWidth = cellSize * 0.9;
+  const healthWidth = cellSize * 1.9;
   const healthX = centerX - healthWidth / 2;
   const healthY = centerY + radius + cellSize * 0.08;
   context.fillStyle = "rgba(32, 48, 32, 0.35)";
-  context.fillRect(healthX, healthY, healthWidth, cellSize * 0.09);
+  context.fillRect(healthX, healthY, healthWidth, cellSize * 0.12);
   context.fillStyle = "#ef4444";
   context.fillRect(
     healthX,
     healthY,
     healthWidth * Math.max(0, boss.hp / boss.maxHp),
-    cellSize * 0.09,
+    cellSize * 0.12,
   );
 }
 

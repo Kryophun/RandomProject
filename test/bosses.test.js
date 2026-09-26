@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   advanceBoss,
+  bossOccupiesPosition,
   createCampaignBoss,
   isBossLevel,
 } from "../src/game/bosses.js";
@@ -24,6 +25,18 @@ describe("campaign bosses", () => {
     expect(createCampaignBoss(20, 10, snake, []).type).toBe("turret");
     expect(createCampaignBoss(20, 15, snake, []).type).toBe("charger");
     expect(createCampaignBoss(20, 20, snake, []).type).toBe("hunter");
+    expect(createCampaignBoss(20, 5, snake, []).hitRadius).toBe(1);
+  });
+
+  it("uses a multi-cell hit area", () => {
+    const boss = createCampaignBoss(20, 5, snake, []);
+
+    expect(
+      bossOccupiesPosition(boss, { x: boss.x + 1, y: boss.y + 1 }),
+    ).toBe(true);
+    expect(
+      bossOccupiesPosition(boss, { x: boss.x + 2, y: boss.y }),
+    ).toBe(false);
   });
 
   it("moves the hunter toward the snake", () => {
@@ -38,7 +51,7 @@ describe("campaign bosses", () => {
       {
         gridSize: 10,
         snake: [{ x: 7, y: 2 }],
-        tick: 2,
+        tick: 4,
       },
     );
     const result = advanceBoss(
@@ -52,7 +65,7 @@ describe("campaign bosses", () => {
       {
         gridSize: 10,
         snake: [{ x: 7, y: 2 }],
-        tick: 4,
+        tick: 6,
       },
     );
 
@@ -73,7 +86,7 @@ describe("campaign bosses", () => {
       {
         gridSize: 10,
         snake: [{ x: 2, y: 8 }],
-        tick: 6,
+        tick: 9,
       },
     );
 
@@ -97,7 +110,7 @@ describe("campaign bosses", () => {
       {
         gridSize: 10,
         snake: [{ x: 8, y: 2 }],
-        tick: 8,
+        tick: 12,
       },
     );
 
@@ -116,7 +129,7 @@ describe("campaign bosses", () => {
     const spawned = advanceBoss(boss, {
       gridSize: 12,
       snake: [{ x: 1, y: 1 }],
-      tick: 12,
+      tick: 18,
     });
 
     expect(spawned.spawnedEnemy).toMatchObject({
@@ -127,7 +140,7 @@ describe("campaign bosses", () => {
       gridSize: 12,
       snake: [{ x: 1, y: 1 }],
       enemies: [spawned.spawnedEnemy],
-      tick: 24,
+      tick: 36,
     });
 
     expect(capped.spawnedEnemy).toBeNull();

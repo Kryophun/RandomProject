@@ -438,7 +438,7 @@ describe("game updates", () => {
       ],
       walls: [],
       boss: {
-        x: 6,
+        x: 7,
         y: 4,
         type: "hunter",
         name: "The Hunter",
@@ -529,14 +529,14 @@ describe("game updates", () => {
         maxHp: 3,
         direction: DIRECTIONS.right,
       },
-      bossTick: 11,
+      bossTick: 17,
       fruit: { x: 0, y: 11 },
     };
 
     const next = stepGame(state);
 
     expect(next.enemies).toHaveLength(1);
-    expect(next.enemies[0].id).toBe("boss-minion-5-12");
+    expect(next.enemies[0].id).toBe("boss-minion-5-18");
   });
 
   it("completes a boss level after the third apple hit", () => {

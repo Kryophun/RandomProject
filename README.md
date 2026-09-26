@@ -59,7 +59,9 @@ stored locally in the browser and remain available after a reload.
   hits defeat the boss. Bosses cycle between pursuit, ranged, and charging
   attack patterns. Their attacks are deliberately slower than normal enemy
   movement, but they periodically summon capped groups of minions. Apple shots
-  destroy minions as well as damage the boss.
+  destroy minions as well as damage the boss. Bosses use a large multi-cell
+  target area so apple shots that pass near their visible body still count as
+  hits.
 
 Every game and Campaign level begins with a three-second countdown. Movement,
 enemies, bosses, projectiles, and controls remain frozen until the countdown

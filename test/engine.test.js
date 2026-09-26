@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   DIRECTIONS,
   createGameState,
+  pauseGame,
   queueDirection,
+  resumeGame,
   startGame,
   stepGame,
 } from "../src/game/engine.js";
@@ -24,6 +26,11 @@ describe("game state", () => {
 
     expect(running.lifecycle).toBe("running");
     expect(startGame(running)).toBe(running);
+  });
+
+  it("preserves a supported edge mode and defaults invalid values to walls", () => {
+    expect(createGameState({ edgeMode: "wrap" }).edgeMode).toBe("wrap");
+    expect(createGameState({ edgeMode: "other" }).edgeMode).toBe("walls");
   });
 });
 
@@ -99,6 +106,31 @@ describe("game updates", () => {
     expect(stepGame(state).lifecycle).toBe("game-over");
   });
 
+  it("wraps across each edge in wrap mode", () => {
+    const cases = [
+      [{ x: 3, y: 1 }, DIRECTIONS.right, { x: 0, y: 1 }],
+      [{ x: 0, y: 1 }, DIRECTIONS.left, { x: 3, y: 1 }],
+      [{ x: 1, y: 0 }, DIRECTIONS.up, { x: 1, y: 3 }],
+      [{ x: 1, y: 3 }, DIRECTIONS.down, { x: 1, y: 0 }],
+    ];
+
+    for (const [head, direction, expected] of cases) {
+      const state = {
+        ...startGame(createGameState({ gridSize: 4, edgeMode: "wrap" })),
+        snake: [
+          head,
+          { x: 2, y: 2 },
+          { x: 2, y: 3 },
+        ],
+        direction,
+        queuedDirection: direction,
+        fruit: { x: 3, y: 3 },
+      };
+
+      expect(stepGame(state).snake[0]).toEqual(expected);
+    }
+  });
+
   it("ends the game when the snake hits itself", () => {
     const state = {
       ...startGame(createGameState({ gridSize: 6 })),
@@ -116,6 +148,25 @@ describe("game updates", () => {
     };
 
     expect(stepGame(state).lifecycle).toBe("game-over");
+  });
+
+  describe("game lifecycle", () => {
+    it("pauses and resumes only from matching states", () => {
+      const ready = createGameState();
+      const running = startGame(ready);
+      const paused = pauseGame(running);
+
+      expect(paused.lifecycle).toBe("paused");
+      expect(pauseGame(ready)).toBe(ready);
+      expect(resumeGame(paused).lifecycle).toBe("running");
+      expect(resumeGame(running)).toBe(running);
+    });
+
+    it("does not move while paused", () => {
+      const paused = pauseGame(startGame(createGameState()));
+
+      expect(stepGame(paused)).toBe(paused);
+    });
   });
 
   it("allows movement into the cell the tail is leaving", () => {

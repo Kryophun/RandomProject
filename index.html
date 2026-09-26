@@ -20,9 +20,15 @@
           <p class="eyebrow">Garden Snake</p>
           <h1>Eat fruit. Keep growing.</h1>
         </div>
-        <div class="score-card" aria-label="Current score">
-          <span>Score</span>
-          <strong id="score">0</strong>
+        <div class="score-group">
+          <div class="score-card" aria-label="Current score">
+            <span>Score</span>
+            <strong id="score">0</strong>
+          </div>
+          <div class="score-card" aria-label="High score">
+            <span>Best</span>
+            <strong id="high-score">0</strong>
+          </div>
         </div>
       </header>
 
@@ -30,19 +36,37 @@
         <canvas id="game-board" width="600" height="600"></canvas>
         <div id="game-overlay" class="game-overlay">
           <p id="game-message">Use arrow keys or WASD to guide the snake.</p>
+          <fieldset id="mode-selector" class="mode-selector">
+            <legend>Board edges</legend>
+            <label>
+              <input type="radio" name="edge-mode" value="walls" checked />
+              <span>Walls</span>
+            </label>
+            <label>
+              <input type="radio" name="edge-mode" value="wrap" />
+              <span>Wrap</span>
+            </label>
+          </fieldset>
           <button id="primary-action" type="button">Start game</button>
         </div>
       </section>
 
-      <p id="game-status" class="game-status" aria-live="polite">
-        Ready to play
-      </p>
+      <div class="game-toolbar">
+        <p id="game-status" class="game-status" aria-live="polite">
+          Ready to play
+        </p>
+        <button id="pause-action" class="secondary-action" type="button" disabled>
+          Pause
+        </button>
+      </div>
 
       <section class="instructions" aria-label="How to play">
         <h2>How to play</h2>
         <p>
-          Eat the fruit to grow. Avoid the walls and your own tail. Use the
-          arrow keys or WASD to turn.
+          Eat the fruit to grow. Avoid your own tail. In Walls mode, avoid the
+          board edges; in Wrap mode, crossing an edge continues from the
+          opposite side. Use the arrow keys or WASD to turn, and press Space to
+          pause.
         </p>
       </section>
     </main>

@@ -1,4 +1,5 @@
 import { placeFruit } from "./fruit.js";
+import { getSpeedTier } from "./speed.js";
 
 export const GRID_SIZE = 20;
 
@@ -31,6 +32,7 @@ export function createGameState({
   gridSize = GRID_SIZE,
   random = Math.random,
   lifecycle = "ready",
+  edgeMode = "walls",
 } = {}) {
   const snake = createInitialSnake(gridSize);
 
@@ -41,6 +43,8 @@ export function createGameState({
     queuedDirection: DIRECTIONS.right,
     fruit: placeFruit(gridSize, snake, random),
     score: 0,
+    speedTier: getSpeedTier(0),
+    edgeMode: edgeMode === "wrap" ? "wrap" : "walls",
     lifecycle,
     completed: false,
   };
@@ -69,6 +73,18 @@ export function queueDirection(state, directionName) {
   return { ...state, queuedDirection: nextDirection };
 }
 
+export function pauseGame(state) {
+  return state.lifecycle === "running"
+    ? { ...state, lifecycle: "paused" }
+    : state;
+}
+
+export function resumeGame(state) {
+  return state.lifecycle === "paused"
+    ? { ...state, lifecycle: "running" }
+    : state;
+}
+
 export function stepGame(state, random = Math.random) {
   if (state.lifecycle !== "running") {
     return state;
@@ -76,7 +92,7 @@ export function stepGame(state, random = Math.random) {
 
   const direction = state.queuedDirection;
   const head = state.snake[0];
-  const nextHead = {
+  let nextHead = {
     x: head.x + direction.x,
     y: head.y + direction.y,
   };
@@ -87,12 +103,19 @@ export function stepGame(state, random = Math.random) {
     nextHead.x >= state.gridSize ||
     nextHead.y >= state.gridSize;
 
-  if (hitWall) {
+  if (hitWall && state.edgeMode === "walls") {
     return {
       ...state,
       direction,
       queuedDirection: direction,
       lifecycle: "game-over",
+    };
+  }
+
+  if (hitWall) {
+    nextHead = {
+      x: (nextHead.x + state.gridSize) % state.gridSize,
+      y: (nextHead.y + state.gridSize) % state.gridSize,
     };
   }
 
@@ -133,6 +156,7 @@ export function stepGame(state, random = Math.random) {
     queuedDirection: direction,
     fruit,
     score,
+    speedTier: getSpeedTier(score),
     completed,
     lifecycle: completed ? "game-over" : "running",
   };

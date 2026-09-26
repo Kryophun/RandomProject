@@ -38,6 +38,11 @@ button {
   margin-bottom: 18px;
 }
 
+.score-group {
+  display: flex;
+  gap: 10px;
+}
+
 .eyebrow {
   margin: 0 0 4px;
   color: #568f43;
@@ -60,7 +65,7 @@ h1 {
 }
 
 .score-card {
-  min-width: 92px;
+  min-width: 82px;
   padding: 10px 16px;
   border: 2px solid rgba(56, 102, 65, 0.16);
   border-radius: 18px;
@@ -122,6 +127,59 @@ h1 {
   font-weight: 700;
 }
 
+.mode-selector {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mode-selector[hidden] {
+  display: none;
+}
+
+.mode-selector legend {
+  width: 100%;
+  margin-bottom: 8px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mode-selector label {
+  position: relative;
+  cursor: pointer;
+}
+
+.mode-selector input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mode-selector span {
+  display: block;
+  min-width: 88px;
+  padding: 9px 14px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.mode-selector input:checked + span {
+  border-color: #f5ca55;
+  background: #f5ca55;
+  color: #293623;
+}
+
+.mode-selector input:focus-visible + span {
+  outline: 4px solid #fff;
+  outline-offset: 3px;
+}
+
 .game-overlay button {
   justify-self: center;
   min-width: 150px;
@@ -144,12 +202,41 @@ h1 {
   outline-offset: 4px;
 }
 
+.game-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 58px;
+  margin-bottom: 20px;
+}
+
 .game-status {
   min-height: 24px;
-  margin: 14px 0 28px;
+  margin: 0;
   color: #5c6b57;
   text-align: center;
   font-weight: 700;
+}
+
+.secondary-action {
+  padding: 7px 14px;
+  border: 1px solid rgba(56, 102, 65, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #386641;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.secondary-action:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.secondary-action:focus-visible {
+  outline: 3px solid #386641;
+  outline-offset: 3px;
 }
 
 .instructions {
@@ -180,7 +267,7 @@ h1 {
   }
 
   .score-card {
-    min-width: 76px;
+    min-width: 66px;
     padding: 8px 12px;
   }
 

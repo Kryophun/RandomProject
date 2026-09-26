@@ -58,6 +58,10 @@ stored locally in the browser and remain available after a reload.
   **Enter**, or **Spit apple** to fire in the snake's current direction. Three
   hits defeat the boss. Bosses cycle between pursuit, ranged, and charging
   attack patterns.
+
+Every game and Campaign level begins with a three-second countdown. Movement,
+enemies, bosses, projectiles, and controls remain frozen until the countdown
+finishes.
 - **Walls:** Crossing a board edge ends the game.
 - **Wrap:** Crossing an edge continues from the opposite side.
 

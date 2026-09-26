@@ -1,10 +1,37 @@
 import { expect, test } from "@playwright/test";
 
+async function startGameAndWait(page, buttonName = "Start game") {
+  await page.getByRole("button", { name: buttonName }).click();
+  await expect(page.locator("#game-status")).toHaveText(
+    /Starting in [123]/,
+  );
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-lifecycle",
+    "running",
+    { timeout: 4_500 },
+  );
+}
+
 test("starts wrap mode, moves, pauses, and resumes", async ({ page }) => {
   await page.goto("/");
   await page.getByText("Wrap", { exact: true }).click();
   await page.getByRole("button", { name: "Start game" }).click();
 
+  await expect(page.locator("#game-status")).toHaveText("Starting in 3");
+  const countdownHead = await page
+    .locator("#game-board")
+    .getAttribute("data-head");
+  await page.waitForTimeout(1_100);
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-head",
+    countdownHead,
+  );
+  await expect(page.locator("#game-status")).toHaveText("Starting in 2");
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-lifecycle",
+    "running",
+    { timeout: 3_000 },
+  );
   await expect(page.getByText(/Wrap mode - speed/)).toBeVisible();
   await expect(page.locator("#game-board")).toHaveAttribute(
     "data-edge-mode",
@@ -46,7 +73,7 @@ test("supports on-screen direction controls and a saved high score", async ({
   await page.reload();
 
   await expect(page.getByLabel("High score")).toContainText("12");
-  await page.getByRole("button", { name: "Start game" }).click();
+  await startGameAndWait(page);
   await page.getByRole("button", { name: "Turn up" }).click();
   await expect(page.locator("#game-board")).toHaveAttribute(
     "data-direction",
@@ -60,20 +87,20 @@ test("supports on-screen direction controls and a saved high score", async ({
 
 test("ends a walls game and restarts from the overlay", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Start game" }).click();
+  await startGameAndWait(page);
 
   await expect(page.locator("#game-status")).toHaveText("Game over", {
     timeout: 4_000,
   });
   await expect(page.getByRole("button", { name: "Play again" })).toBeVisible();
-  await page.getByRole("button", { name: "Play again" }).click();
+  await startGameAndWait(page, "Play again");
   await expect(page.getByText(/Walls mode - speed/)).toBeVisible();
 });
 
 test("starts a campaign with a target and obstacle layout", async ({ page }) => {
   await page.goto("/");
   await page.getByText("Campaign", { exact: true }).click();
-  await page.getByRole("button", { name: "Start game" }).click();
+  await startGameAndWait(page);
 
   await expect(page.locator("#campaign-progress")).toContainText("Level 1");
   await expect(page.locator("#campaign-progress")).toContainText("0 / 3");

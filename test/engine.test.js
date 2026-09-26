@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  advanceLevelCountdown,
   advanceCampaignLevel,
+  beginLevelCountdown,
   DIRECTIONS,
   createGameState,
   pauseGame,
@@ -69,6 +71,25 @@ describe("game state", () => {
     expect(state.enemies).toHaveLength(0);
     expect(state.rainbowApple).toBeNull();
     expect(state.applesRequired).toBe(0);
+  });
+
+  it("counts down three seconds before entering the running state", () => {
+    const ready = createGameState();
+    const three = beginLevelCountdown(ready);
+    const two = advanceLevelCountdown(three);
+    const one = advanceLevelCountdown(two);
+    const running = advanceLevelCountdown(one);
+
+    expect(three).toMatchObject({
+      lifecycle: "countdown",
+      countdown: 3,
+    });
+    expect(two.countdown).toBe(2);
+    expect(one.countdown).toBe(1);
+    expect(running).toMatchObject({
+      lifecycle: "running",
+      countdown: 0,
+    });
   });
 });
 

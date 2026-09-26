@@ -122,6 +122,7 @@ export function createGameState({
     appleAmmo: 0,
     bossTick: 0,
     bossesDefeated,
+    countdown: 0,
     lifecycle,
     completed: false,
   };
@@ -133,6 +134,41 @@ export function startGame(state) {
   }
 
   return { ...state, lifecycle: "running" };
+}
+
+export function beginLevelCountdown(state, seconds = 3) {
+  if (
+    !["ready", "running"].includes(state.lifecycle) ||
+    !Number.isInteger(seconds) ||
+    seconds <= 0
+  ) {
+    return state;
+  }
+
+  return {
+    ...state,
+    countdown: seconds,
+    lifecycle: "countdown",
+  };
+}
+
+export function advanceLevelCountdown(state) {
+  if (state.lifecycle !== "countdown") {
+    return state;
+  }
+
+  if (state.countdown <= 1) {
+    return {
+      ...state,
+      countdown: 0,
+      lifecycle: "running",
+    };
+  }
+
+  return {
+    ...state,
+    countdown: state.countdown - 1,
+  };
 }
 
 export function queueDirection(state, directionName) {

@@ -216,6 +216,16 @@ h1 {
   display: none;
 }
 
+.game-overlay button[hidden] {
+  display: none;
+}
+
+.game-overlay.is-countdown #game-message {
+  font-size: clamp(4rem, 20vw, 8rem);
+  line-height: 1;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+}
+
 .game-overlay p {
   max-width: 360px;
   margin-bottom: 0;

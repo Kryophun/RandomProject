@@ -6,13 +6,14 @@ import {
   writeUnlockedAchievements,
 } from "./achievements/achievements.js";
 import {
+  advanceLevelCountdown,
   advanceCampaignLevel,
+  beginLevelCountdown,
   createGameState,
   pauseGame,
   queueDirection,
   resumeGame,
   spitApple,
-  startGame,
   stepGame,
 } from "./game/engine.js";
 import { getTickInterval } from "./game/speed.js";
@@ -64,6 +65,7 @@ const achievementNotification = document.querySelector(
 
 let state = createGameState();
 let timerId = null;
+let countdownTimerId = null;
 let highScore = readHighScore();
 let pointerStart = null;
 let notificationTimerId = null;
@@ -76,9 +78,21 @@ function stopTimer() {
   }
 }
 
+function stopCountdownTimer() {
+  if (countdownTimerId !== null) {
+    window.clearTimeout(countdownTimerId);
+    countdownTimerId = null;
+  }
+}
+
 function scheduleTick() {
   stopTimer();
   timerId = window.setTimeout(runTick, getTickInterval(state.score));
+}
+
+function scheduleCountdownTick() {
+  stopCountdownTimer();
+  countdownTimerId = window.setTimeout(runCountdownTick, 1_000);
 }
 
 function updateHighScore() {
@@ -178,14 +192,23 @@ function updateInterface() {
 
   const isReady = state.lifecycle === "ready";
   const isPaused = state.lifecycle === "paused";
+  const isCountdown = state.lifecycle === "countdown";
   const isGameOver = state.lifecycle === "game-over";
   const isLevelComplete = state.lifecycle === "level-complete";
   const isCampaign = state.gameMode === "campaign";
   const isBossLevel = Boolean(state.bossLevel);
-  overlay.hidden = !isReady && !isPaused && !isGameOver && !isLevelComplete;
-  modeSelector.hidden = isPaused || isLevelComplete;
-  gameModeSelector.hidden = isPaused || isLevelComplete;
-  pauseAction.disabled = isReady || isGameOver || isLevelComplete;
+  overlay.hidden =
+    !isReady &&
+    !isPaused &&
+    !isCountdown &&
+    !isGameOver &&
+    !isLevelComplete;
+  overlay.classList.toggle("is-countdown", isCountdown);
+  modeSelector.hidden = isPaused || isCountdown || isLevelComplete;
+  gameModeSelector.hidden = isPaused || isCountdown || isLevelComplete;
+  primaryAction.hidden = isCountdown;
+  pauseAction.disabled =
+    isReady || isCountdown || isGameOver || isLevelComplete;
   pauseAction.textContent = isPaused ? "Resume" : "Pause";
   campaignProgress.hidden = !isCampaign;
   campaignLevel.textContent = String(state.level);
@@ -215,6 +238,13 @@ function updateInterface() {
     primaryAction.textContent = "Start game";
     status.textContent = "Ready to play";
     canvas.setAttribute("aria-label", "Snake board. Ready to play.");
+  } else if (isCountdown) {
+    message.textContent = String(state.countdown);
+    status.textContent = `Starting in ${state.countdown}`;
+    canvas.setAttribute(
+      "aria-label",
+      `Snake board starts in ${state.countdown}.`,
+    );
   } else if (isPaused) {
     message.textContent = "Game paused";
     primaryAction.textContent = "Resume";
@@ -281,24 +311,44 @@ function runTick() {
   }
 }
 
+function runCountdownTick() {
+  countdownTimerId = null;
+  state = advanceLevelCountdown(state);
+  updateInterface();
+
+  if (state.lifecycle === "countdown") {
+    scheduleCountdownTick();
+  } else if (state.lifecycle === "running") {
+    scheduleTick();
+  }
+}
+
+function startLevelCountdown() {
+  stopTimer();
+  stopCountdownTimer();
+  state = beginLevelCountdown(state);
+  updateInterface();
+  scheduleCountdownTick();
+}
+
 function beginGame() {
   stopTimer();
+  stopCountdownTimer();
   const edgeMode = document.querySelector(
     'input[name="edge-mode"]:checked',
   ).value;
   const gameMode = document.querySelector(
     'input[name="game-mode"]:checked',
   ).value;
-  state = startGame(createGameState({ edgeMode, gameMode }));
-  updateInterface();
-  scheduleTick();
+  state = createGameState({ edgeMode, gameMode });
+  startLevelCountdown();
 }
 
 function startNextCampaignLevel() {
   stopTimer();
+  stopCountdownTimer();
   state = advanceCampaignLevel(state);
-  updateInterface();
-  scheduleTick();
+  startLevelCountdown();
 }
 
 function togglePause() {
@@ -353,6 +403,10 @@ function selectTab(tabName) {
     togglePause();
   }
 
+  if (tabName === "achievements" && state.lifecycle === "countdown") {
+    stopCountdownTimer();
+  }
+
   const showGame = tabName === "game";
   gamePanel.hidden = !showGame;
   achievementsPanel.hidden = showGame;
@@ -363,6 +417,14 @@ function selectTab(tabName) {
       String(button.dataset.tab === tabName),
     );
   });
+
+  if (
+    showGame &&
+    state.lifecycle === "countdown" &&
+    countdownTimerId === null
+  ) {
+    scheduleCountdownTick();
+  }
 }
 
 primaryAction.addEventListener("click", () => {

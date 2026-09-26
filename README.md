@@ -57,7 +57,9 @@ stored locally in the browser and remain available after a reload.
   normal enemies with a boss. Eat apples to gain shots, then press **F**,
   **Enter**, or **Spit apple** to fire in the snake's current direction. Three
   hits defeat the boss. Bosses cycle between pursuit, ranged, and charging
-  attack patterns.
+  attack patterns. Their attacks are deliberately slower than normal enemy
+  movement, but they periodically summon capped groups of minions. Apple shots
+  destroy minions as well as damage the boss.
 
 Every game and Campaign level begins with a three-second countdown. Movement,
 enemies, bosses, projectiles, and controls remain frozen until the countdown

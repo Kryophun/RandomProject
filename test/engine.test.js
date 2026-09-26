@@ -465,6 +465,80 @@ describe("game updates", () => {
     expect(hit.boss.hp).toBe(2);
   });
 
+  it("lets apple shots destroy boss-spawned minions", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 5,
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [
+        {
+          id: "boss-minion",
+          x: 5,
+          y: 4,
+          pattern: "horizontal",
+          direction: DIRECTIONS.right,
+          directionIndex: 0,
+        },
+      ],
+      appleAmmo: 1,
+      score: 0,
+    };
+
+    const fired = spitApple(state);
+
+    expect(fired.enemies).toHaveLength(0);
+    expect(fired.enemiesDefeated).toBe(1);
+    expect(fired.score).toBe(2);
+    expect(fired.boss.hp).toBe(3);
+  });
+
+  it("adds a boss-spawned minion to the active arena", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 12,
+          gameMode: "campaign",
+          level: 5,
+          edgeMode: "wrap",
+        }),
+      ),
+      snake: [
+        { x: 6, y: 6 },
+        { x: 5, y: 6 },
+        { x: 4, y: 6 },
+      ],
+      walls: [],
+      enemies: [],
+      boss: {
+        x: 1,
+        y: 1,
+        type: "hunter",
+        name: "The Hunter",
+        level: 5,
+        hp: 3,
+        maxHp: 3,
+        direction: DIRECTIONS.right,
+      },
+      bossTick: 11,
+      fruit: { x: 0, y: 11 },
+    };
+
+    const next = stepGame(state);
+
+    expect(next.enemies).toHaveLength(1);
+    expect(next.enemies[0].id).toBe("boss-minion-5-12");
+  });
+
   it("completes a boss level after the third apple hit", () => {
     let state = {
       ...startGame(

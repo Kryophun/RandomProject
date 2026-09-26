@@ -74,6 +74,70 @@ function moveToward(boss, target, gridSize, blocked, distance = 1) {
   return moved;
 }
 
+function createSpawnedEnemy(
+  boss,
+  {
+    gridSize,
+    walls,
+    snake,
+    enemies,
+    protectedCells,
+    tick,
+  },
+) {
+  const blocked = new Set(
+    [
+      ...walls,
+      ...snake,
+      ...enemies,
+      ...protectedCells,
+      boss,
+    ].map(positionKey),
+  );
+  const offsets = [
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 0, y: -1 },
+    { x: 2, y: 0 },
+    { x: 0, y: 2 },
+    { x: -2, y: 0 },
+    { x: 0, y: -2 },
+  ];
+  const startIndex = tick % offsets.length;
+
+  for (let offsetIndex = 0; offsetIndex < offsets.length; offsetIndex += 1) {
+    const offset = offsets[(startIndex + offsetIndex) % offsets.length];
+    const position = {
+      x: boss.x + offset.x,
+      y: boss.y + offset.y,
+    };
+
+    if (isBlocked(position, gridSize, blocked)) {
+      continue;
+    }
+
+    const pattern =
+      boss.type === "hunter"
+        ? "horizontal"
+        : boss.type === "turret"
+          ? "vertical"
+          : "clockwise";
+    const direction =
+      pattern === "vertical" ? { x: 0, y: 1 } : { x: 1, y: 0 };
+
+    return {
+      id: `boss-minion-${boss.level}-${tick}`,
+      ...position,
+      pattern,
+      direction,
+      directionIndex: 0,
+    };
+  }
+
+  return null;
+}
+
 export function isBossLevel(level) {
   return level > 0 && level % 5 === 0;
 }
@@ -113,6 +177,7 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
     y: spawn.y,
     hp: 3,
     maxHp: 3,
+    level,
     direction: { x: -1, y: 0 },
   };
 }
@@ -123,46 +188,56 @@ export function advanceBoss(
     gridSize,
     walls = [],
     snake,
+    enemies = [],
+    protectedCells = [],
     tick,
   },
 ) {
   if (!boss) {
-    return { boss: null, projectile: null };
+    return { boss: null, projectile: null, spawnedEnemy: null };
   }
 
-  const blocked = new Set(walls.map(positionKey));
+  const blocked = new Set([...walls, ...enemies].map(positionKey));
   const target = snake[0];
+  let nextBoss = boss;
+  let projectile = null;
 
-  if (boss.type === "hunter" && tick % 2 === 0) {
-    return {
-      boss: moveToward(boss, target, gridSize, blocked),
-      projectile: null,
-    };
+  if (boss.type === "hunter" && tick % 4 === 0) {
+    nextBoss = moveToward(boss, target, gridSize, blocked);
   }
 
-  if (boss.type === "charger" && tick % 4 === 0) {
-    return {
-      boss: moveToward(boss, target, gridSize, blocked, 2),
-      projectile: null,
-    };
+  if (boss.type === "charger" && tick % 8 === 0) {
+    nextBoss = moveToward(boss, target, gridSize, blocked, 2);
   }
 
-  if (boss.type === "turret" && tick % 3 === 0) {
+  if (boss.type === "turret" && tick % 6 === 0) {
     const [direction] = directionsToward(boss, target);
 
-    return {
-      boss,
-      projectile: direction
-        ? {
-            x: boss.x,
-            y: boss.y,
-            direction,
-          }
-        : null,
-    };
+    projectile = direction
+      ? {
+          x: boss.x,
+          y: boss.y,
+          direction,
+        }
+      : null;
   }
 
-  return { boss, projectile: null };
+  const spawnInterval =
+    boss.type === "hunter" ? 12 : boss.type === "turret" ? 10 : 14;
+  const maxMinions = Math.min(4, 1 + Math.floor(boss.level / 10));
+  const spawnedEnemy =
+    tick % spawnInterval === 0 && enemies.length < maxMinions
+      ? createSpawnedEnemy(nextBoss, {
+          gridSize,
+          walls,
+          snake,
+          enemies,
+          protectedCells,
+          tick,
+        })
+      : null;
+
+  return { boss: nextBoss, projectile, spawnedEnemy };
 }
 
 export { BOSS_TYPES };

@@ -44,6 +44,9 @@ const campaignBossStatus = document.querySelector("#campaign-boss-status");
 const campaignBossName = document.querySelector("#campaign-boss-name");
 const campaignBossHp = document.querySelector("#campaign-boss-hp");
 const campaignBossAmmo = document.querySelector("#campaign-boss-ammo");
+const campaignBossMinions = document.querySelector(
+  "#campaign-boss-minions",
+);
 const campaignPower = document.querySelector("#campaign-power");
 const campaignPowerCount = document.querySelector("#campaign-power-count");
 const overlay = document.querySelector("#game-overlay");
@@ -242,6 +245,7 @@ function updateInterface() {
   campaignBossHp.textContent =
     `${Math.max(0, state.boss?.hp ?? 0)} / ${state.boss?.maxHp ?? 3}`;
   campaignBossAmmo.textContent = String(state.appleAmmo ?? 0);
+  campaignBossMinions.textContent = String(state.enemies?.length ?? 0);
   spitAction.hidden = !isBossLevel;
   spitAction.disabled =
     !isBossLevel ||
@@ -292,7 +296,7 @@ function updateInterface() {
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
     status.textContent = isBossLevel
-      ? `${state.debugMode ? "Debug " : ""}Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/3 - ${state.appleAmmo} apple shots`
+      ? `${state.debugMode ? "Debug " : ""}Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/3 - ${state.appleAmmo} apple shots - ${state.enemies?.length ?? 0} minions`
       : isCampaign
       ? `${state.debugMode ? "Debug " : ""}Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples${
           state.invincibilityTicks > 0
@@ -305,7 +309,7 @@ function updateInterface() {
       `Snake board in progress. Score ${state.score}. ${
         isCampaign
           ? isBossLevel
-            ? `Boss level ${state.level}. ${state.boss?.name} has ${state.boss?.hp} health. ${state.appleAmmo} apple shots available.`
+            ? `Boss level ${state.level}. ${state.boss?.name} has ${state.boss?.hp} health. ${state.appleAmmo} apple shots and ${state.enemies?.length ?? 0} minions active.`
             : `Campaign level ${state.level}, ${state.applesEaten} of ${state.applesRequired} apples, ${state.enemies?.length ?? 0} enemies active.${
               state.invincibilityTicks > 0
                 ? ` Invincible for ${state.invincibilityTicks} moves.`

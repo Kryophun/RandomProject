@@ -27,11 +27,12 @@ describe("campaign bosses", () => {
   });
 
   it("moves the hunter toward the snake", () => {
-    const result = advanceBoss(
+    const waiting = advanceBoss(
       {
         x: 2,
         y: 2,
         type: "hunter",
+        level: 5,
         direction: { x: 1, y: 0 },
       },
       {
@@ -40,7 +41,22 @@ describe("campaign bosses", () => {
         tick: 2,
       },
     );
+    const result = advanceBoss(
+      {
+        x: 2,
+        y: 2,
+        type: "hunter",
+        level: 5,
+        direction: { x: 1, y: 0 },
+      },
+      {
+        gridSize: 10,
+        snake: [{ x: 7, y: 2 }],
+        tick: 4,
+      },
+    );
 
+    expect(waiting.boss).toMatchObject({ x: 2, y: 2 });
     expect(result.boss).toMatchObject({ x: 3, y: 2 });
     expect(result.projectile).toBeNull();
   });
@@ -51,12 +67,13 @@ describe("campaign bosses", () => {
         x: 2,
         y: 2,
         type: "turret",
+        level: 10,
         direction: { x: 1, y: 0 },
       },
       {
         gridSize: 10,
         snake: [{ x: 2, y: 8 }],
-        tick: 3,
+        tick: 6,
       },
     );
 
@@ -74,16 +91,45 @@ describe("campaign bosses", () => {
         x: 2,
         y: 2,
         type: "charger",
+        level: 15,
         direction: { x: 1, y: 0 },
       },
       {
         gridSize: 10,
         snake: [{ x: 8, y: 2 }],
-        tick: 4,
+        tick: 8,
       },
     );
 
     expect(result.boss).toMatchObject({ x: 4, y: 2 });
     expect(result.projectile).toBeNull();
+  });
+
+  it("periodically spawns a capped patrol minion", () => {
+    const boss = {
+      x: 5,
+      y: 5,
+      type: "hunter",
+      level: 5,
+      direction: { x: 1, y: 0 },
+    };
+    const spawned = advanceBoss(boss, {
+      gridSize: 12,
+      snake: [{ x: 1, y: 1 }],
+      tick: 12,
+    });
+
+    expect(spawned.spawnedEnemy).toMatchObject({
+      pattern: "horizontal",
+    });
+
+    const capped = advanceBoss(boss, {
+      gridSize: 12,
+      snake: [{ x: 1, y: 1 }],
+      enemies: [spawned.spawnedEnemy],
+      tick: 24,
+    });
+
+    expect(capped.spawnedEnemy).toBeNull();
   });
 });

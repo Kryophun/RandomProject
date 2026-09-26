@@ -251,6 +251,8 @@ function nextProjectilePosition(projectile, state, allowWrap = false) {
 
 function advanceProjectiles(state) {
   let boss = state.boss;
+  let enemies = state.enemies ?? [];
+  let enemiesDefeated = state.enemiesDefeated ?? 0;
   let score = state.score;
   let bossesDefeated = state.bossesDefeated ?? 0;
   let lifecycle = state.lifecycle;
@@ -263,7 +265,13 @@ function advanceProjectiles(state) {
       continue;
     }
 
-    if (boss && positionsMatch(next, boss)) {
+    const hitEnemy = enemies.find((enemy) => positionsMatch(next, enemy));
+
+    if (hitEnemy) {
+      enemies = enemies.filter((enemy) => enemy.id !== hitEnemy.id);
+      enemiesDefeated += 1;
+      score += ENEMY_KILL_SCORE;
+    } else if (boss && positionsMatch(next, boss)) {
       boss = { ...boss, hp: boss.hp - 1 };
       score += 2;
 
@@ -281,6 +289,8 @@ function advanceProjectiles(state) {
     return {
       ...state,
       boss,
+      enemies,
+      enemiesDefeated,
       score,
       bossesDefeated,
       appleProjectiles: [],
@@ -301,6 +311,8 @@ function advanceProjectiles(state) {
       return {
         ...state,
         boss,
+        enemies,
+        enemiesDefeated,
         score,
         bossesDefeated,
         appleProjectiles,
@@ -315,6 +327,8 @@ function advanceProjectiles(state) {
   return {
     ...state,
     boss,
+    enemies,
+    enemiesDefeated,
     score,
     bossesDefeated,
     appleProjectiles,
@@ -347,6 +361,19 @@ export function spitApple(state) {
 
   if (!next) {
     return firedState;
+  }
+
+  const hitEnemy = (state.enemies ?? []).find((enemy) =>
+    positionsMatch(enemy, next),
+  );
+
+  if (hitEnemy) {
+    return {
+      ...firedState,
+      enemies: state.enemies.filter((enemy) => enemy.id !== hitEnemy.id),
+      enemiesDefeated: (state.enemiesDefeated ?? 0) + 1,
+      score: state.score + ENEMY_KILL_SCORE,
+    };
   }
 
   if (positionsMatch(next, state.boss)) {
@@ -529,7 +556,7 @@ export function stepGame(state, random = Math.random) {
     enemies = moveEnemies(enemies, {
       gridSize: state.gridSize,
       walls: state.walls,
-      protectedCells: [fruit, rainbowApple].filter(Boolean),
+      protectedCells: [fruit, rainbowApple, boss].filter(Boolean),
     });
 
     const collidingEnemyIds = new Set(
@@ -558,6 +585,13 @@ export function stepGame(state, random = Math.random) {
       gridSize: state.gridSize,
       walls: state.walls,
       snake,
+      enemies,
+      protectedCells: [
+        fruit,
+        rainbowApple,
+        ...(state.appleProjectiles ?? []),
+        ...bossProjectiles,
+      ].filter(Boolean),
       tick: bossTick,
     });
     boss = bossAction.boss;
@@ -567,6 +601,10 @@ export function stepGame(state, random = Math.random) {
         ...bossProjectiles,
         bossAction.projectile,
       ];
+    }
+
+    if (bossAction.spawnedEnemy) {
+      enemies = [...enemies, bossAction.spawnedEnemy];
     }
 
     if (snake.some((segment) => positionsMatch(segment, boss))) {

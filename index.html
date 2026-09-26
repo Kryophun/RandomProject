@@ -32,6 +32,14 @@
         </div>
       </header>
 
+      <div id="campaign-progress" class="campaign-progress" hidden>
+        <strong>Level <span id="campaign-level">1</span></strong>
+        <span>
+          Apples
+          <strong id="campaign-apples">0 / 3</strong>
+        </span>
+      </div>
+
       <section
         id="board-wrap"
         class="board-wrap"
@@ -46,7 +54,18 @@
         ></canvas>
         <div id="game-overlay" class="game-overlay">
           <p id="game-message">Use arrow keys or WASD to guide the snake.</p>
-          <fieldset id="mode-selector" class="mode-selector">
+          <fieldset id="game-mode-selector" class="mode-selector setup-selector">
+            <legend>Game mode</legend>
+            <label>
+              <input type="radio" name="game-mode" value="classic" checked />
+              <span>Classic</span>
+            </label>
+            <label>
+              <input type="radio" name="game-mode" value="campaign" />
+              <span>Campaign</span>
+            </label>
+          </fieldset>
+          <fieldset id="mode-selector" class="mode-selector setup-selector">
             <legend>Board edges</legend>
             <label>
               <input type="radio" name="edge-mode" value="walls" checked />
@@ -112,7 +131,8 @@
           Eat the fruit to grow. Avoid your own tail. In Walls mode, avoid the
           board edges; in Wrap mode, crossing an edge continues from the
           opposite side. Use the arrow keys, WASD, direction buttons, or a
-          swipe across the board to turn. Press Space to pause.
+          swipe across the board to turn. Press Space to pause. Campaign mode
+          adds stone walls and requires more apples as each level gets harder.
         </p>
       </section>
     </main>

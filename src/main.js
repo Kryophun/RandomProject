@@ -1,5 +1,6 @@
 import "./styles.css";
 import {
+  advanceCampaignLevel,
   createGameState,
   pauseGame,
   queueDirection,
@@ -20,9 +21,13 @@ const context = canvas.getContext("2d");
 const boardWrap = document.querySelector("#board-wrap");
 const score = document.querySelector("#score");
 const highScoreDisplay = document.querySelector("#high-score");
+const campaignProgress = document.querySelector("#campaign-progress");
+const campaignLevel = document.querySelector("#campaign-level");
+const campaignApples = document.querySelector("#campaign-apples");
 const overlay = document.querySelector("#game-overlay");
 const message = document.querySelector("#game-message");
 const modeSelector = document.querySelector("#mode-selector");
+const gameModeSelector = document.querySelector("#game-mode-selector");
 const primaryAction = document.querySelector("#primary-action");
 const pauseAction = document.querySelector("#pause-action");
 const status = document.querySelector("#game-status");
@@ -61,6 +66,9 @@ function updateInterface() {
   renderGame(context, state);
   canvas.dataset.lifecycle = state.lifecycle;
   canvas.dataset.edgeMode = state.edgeMode;
+  canvas.dataset.gameMode = state.gameMode;
+  canvas.dataset.level = String(state.level);
+  canvas.dataset.wallCount = String(state.walls?.length ?? 0);
   canvas.dataset.direction = Object.entries(
     {
       up: { x: 0, y: -1 },
@@ -77,13 +85,19 @@ function updateInterface() {
   const isReady = state.lifecycle === "ready";
   const isPaused = state.lifecycle === "paused";
   const isGameOver = state.lifecycle === "game-over";
-  overlay.hidden = !isReady && !isPaused && !isGameOver;
-  modeSelector.hidden = isPaused;
-  pauseAction.disabled = isReady || isGameOver;
+  const isLevelComplete = state.lifecycle === "level-complete";
+  const isCampaign = state.gameMode === "campaign";
+  overlay.hidden = !isReady && !isPaused && !isGameOver && !isLevelComplete;
+  modeSelector.hidden = isPaused || isLevelComplete;
+  gameModeSelector.hidden = isPaused || isLevelComplete;
+  pauseAction.disabled = isReady || isGameOver || isLevelComplete;
   pauseAction.textContent = isPaused ? "Resume" : "Pause";
+  campaignProgress.hidden = !isCampaign;
+  campaignLevel.textContent = String(state.level);
+  campaignApples.textContent = `${state.applesEaten} / ${state.applesRequired}`;
 
   if (isReady) {
-    message.textContent = "Use arrow keys or WASD to guide the snake.";
+    message.textContent = "Choose a game mode, then guide the snake to apples.";
     primaryAction.textContent = "Start game";
     status.textContent = "Ready to play";
     canvas.setAttribute("aria-label", "Snake board. Ready to play.");
@@ -95,10 +109,18 @@ function updateInterface() {
       "aria-label",
       `Snake board paused at score ${state.score}.`,
     );
+  } else if (isLevelComplete) {
+    message.textContent = `Level ${state.level} complete! ${state.applesEaten} apples eaten.`;
+    primaryAction.textContent = `Start level ${state.level + 1}`;
+    status.textContent = `Level ${state.level} complete`;
+    canvas.setAttribute(
+      "aria-label",
+      `Campaign level ${state.level} complete at score ${state.score}.`,
+    );
   } else if (isGameOver) {
     message.textContent = state.completed
       ? `Board complete! Final score: ${state.score}`
-      : `Game over. Final score: ${state.score}`;
+      : `${isCampaign ? `Campaign ended on level ${state.level}. ` : ""}Final score: ${state.score}`;
     primaryAction.textContent = "Play again";
     status.textContent = state.completed ? "Board complete" : "Game over";
     canvas.setAttribute(
@@ -107,10 +129,16 @@ function updateInterface() {
     );
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
-    status.textContent = `${modeLabel} mode - speed ${state.speedTier + 1}`;
+    status.textContent = isCampaign
+      ? `Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples`
+      : `${modeLabel} mode - speed ${state.speedTier + 1}`;
     canvas.setAttribute(
       "aria-label",
-      `Snake board in progress. Score ${state.score}. ${modeLabel} mode.`,
+      `Snake board in progress. Score ${state.score}. ${
+        isCampaign
+          ? `Campaign level ${state.level}, ${state.applesEaten} of ${state.applesRequired} apples.`
+          : `${modeLabel} mode.`
+      }`,
     );
   }
 }
@@ -130,7 +158,17 @@ function beginGame() {
   const edgeMode = document.querySelector(
     'input[name="edge-mode"]:checked',
   ).value;
-  state = startGame(createGameState({ edgeMode }));
+  const gameMode = document.querySelector(
+    'input[name="game-mode"]:checked',
+  ).value;
+  state = startGame(createGameState({ edgeMode, gameMode }));
+  updateInterface();
+  scheduleTick();
+}
+
+function startNextCampaignLevel() {
+  stopTimer();
+  state = advanceCampaignLevel(state);
   updateInterface();
   scheduleTick();
 }
@@ -169,6 +207,8 @@ function resizeCanvas() {
 primaryAction.addEventListener("click", () => {
   if (state.lifecycle === "paused") {
     togglePause();
+  } else if (state.lifecycle === "level-complete") {
+    startNextCampaignLevel();
   } else {
     beginGame();
   }

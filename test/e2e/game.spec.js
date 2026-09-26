@@ -69,3 +69,21 @@ test("ends a walls game and restarts from the overlay", async ({ page }) => {
   await page.getByRole("button", { name: "Play again" }).click();
   await expect(page.getByText(/Walls mode - speed/)).toBeVisible();
 });
+
+test("starts a campaign with a target and obstacle layout", async ({ page }) => {
+  await page.goto("/");
+  await page.getByText("Campaign", { exact: true }).click();
+  await page.getByRole("button", { name: "Start game" }).click();
+
+  await expect(page.locator("#campaign-progress")).toContainText("Level 1");
+  await expect(page.locator("#campaign-progress")).toContainText("0 / 3");
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-game-mode",
+    "campaign",
+  );
+
+  const wallCount = Number(
+    await page.locator("#game-board").getAttribute("data-wall-count"),
+  );
+  expect(wallCount).toBeGreaterThan(0);
+});

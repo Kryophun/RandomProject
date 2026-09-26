@@ -1,5 +1,7 @@
-export function listEmptyCells(gridSize, snake) {
-  const occupied = new Set(snake.map(({ x, y }) => `${x},${y}`));
+export function listEmptyCells(gridSize, snake, blockedCells = []) {
+  const occupied = new Set(
+    [...snake, ...blockedCells].map(({ x, y }) => `${x},${y}`),
+  );
   const emptyCells = [];
 
   for (let y = 0; y < gridSize; y += 1) {
@@ -13,8 +15,13 @@ export function listEmptyCells(gridSize, snake) {
   return emptyCells;
 }
 
-export function placeFruit(gridSize, snake, random = Math.random) {
-  const emptyCells = listEmptyCells(gridSize, snake);
+export function placeFruit(
+  gridSize,
+  snake,
+  random = Math.random,
+  blockedCells = [],
+) {
+  const emptyCells = listEmptyCells(gridSize, snake, blockedCells);
 
   if (emptyCells.length === 0) {
     return null;

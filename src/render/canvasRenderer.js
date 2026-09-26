@@ -5,6 +5,8 @@ const COLORS = Object.freeze({
   snakeHead: "#24452b",
   fruit: "#e45f4f",
   fruitLeaf: "#568f43",
+  wall: "#786857",
+  wallHighlight: "#9a8874",
 });
 
 function drawGrid(context, size, cellSize) {
@@ -65,6 +67,26 @@ function drawFruit(context, fruit, cellSize) {
   context.fill();
 }
 
+function drawWall(context, wall, cellSize) {
+  const padding = cellSize * 0.08;
+  const x = wall.x * cellSize + padding;
+  const y = wall.y * cellSize + padding;
+  const size = cellSize - padding * 2;
+
+  context.fillStyle = COLORS.wall;
+  context.beginPath();
+  context.roundRect(x, y, size, size, cellSize * 0.12);
+  context.fill();
+
+  context.fillStyle = COLORS.wallHighlight;
+  context.fillRect(
+    x + size * 0.16,
+    y + size * 0.18,
+    size * 0.68,
+    Math.max(1, size * 0.12),
+  );
+}
+
 export function renderGame(context, state) {
   const { width, height } = context.canvas;
   const cellSize = width / state.gridSize;
@@ -73,6 +95,7 @@ export function renderGame(context, state) {
   context.fillStyle = COLORS.board;
   context.fillRect(0, 0, width, height);
   drawGrid(context, state.gridSize, cellSize);
+  state.walls?.forEach((wall) => drawWall(context, wall, cellSize));
   drawFruit(context, state.fruit, cellSize);
 
   state.snake

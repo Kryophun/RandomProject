@@ -8,6 +8,7 @@ grid-based Snake games.
 
 - Fruit, growth, scoring, wall collisions, and self-collisions
 - Walls and edge-wrapping modes selectable before each game
+- Progressive campaign mode with apple targets and obstacle layouts
 - Increasing speed as the score grows
 - Pause and resume
 - Locally saved high score
@@ -34,6 +35,10 @@ The snake cannot reverse directly into its own neck.
 
 ## Game modes
 
+- **Classic:** Keep eating and growing until the snake collides.
+- **Campaign:** Complete each level by eating its required apples. Every new
+  level requires more apples and adds more stone walls. Obstacle layouts are
+  different for each level while keeping all open board cells connected.
 - **Walls:** Crossing a board edge ends the game.
 - **Wrap:** Crossing an edge continues from the opposite side.
 

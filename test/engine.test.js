@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  advanceCampaignLevel,
   DIRECTIONS,
   createGameState,
   pauseGame,
@@ -31,6 +32,20 @@ describe("game state", () => {
   it("preserves a supported edge mode and defaults invalid values to walls", () => {
     expect(createGameState({ edgeMode: "wrap" }).edgeMode).toBe("wrap");
     expect(createGameState({ edgeMode: "other" }).edgeMode).toBe("walls");
+  });
+
+  it("creates campaign targets and walls without blocking fruit", () => {
+    const state = createGameState({
+      gameMode: "campaign",
+      random: () => 0,
+    });
+
+    expect(state.gameMode).toBe("campaign");
+    expect(state.level).toBe(1);
+    expect(state.applesRequired).toBe(3);
+    expect(state.walls).toHaveLength(6);
+    expect(state.walls).not.toContainEqual(state.fruit);
+    expect(state.snake).not.toContainEqual(state.fruit);
   });
 });
 
@@ -148,6 +163,60 @@ describe("game updates", () => {
     };
 
     expect(stepGame(state).lifecycle).toBe("game-over");
+  });
+
+  it("ends the game when the snake hits a campaign wall", () => {
+    const state = {
+      ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [{ x: 5, y: 4 }],
+      fruit: { x: 0, y: 0 },
+    };
+
+    expect(stepGame(state).lifecycle).toBe("game-over");
+  });
+
+  it("completes a campaign level after its required apple", () => {
+    const state = {
+      ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      fruit: { x: 5, y: 4 },
+      applesEaten: 2,
+      applesRequired: 3,
+    };
+
+    const next = stepGame(state);
+
+    expect(next.lifecycle).toBe("level-complete");
+    expect(next.applesEaten).toBe(3);
+    expect(next.score).toBe(1);
+    expect(next.fruit).toBeNull();
+  });
+
+  it("advances to a harder campaign level while preserving score", () => {
+    const completed = {
+      ...createGameState({ gameMode: "campaign", score: 7 }),
+      lifecycle: "level-complete",
+      level: 2,
+    };
+
+    const next = advanceCampaignLevel(completed, () => 0);
+
+    expect(next.lifecycle).toBe("running");
+    expect(next.level).toBe(3);
+    expect(next.score).toBe(7);
+    expect(next.applesEaten).toBe(0);
+    expect(next.applesRequired).toBe(7);
+    expect(next.walls.length).toBeGreaterThan(completed.walls.length);
   });
 
   describe("game lifecycle", () => {

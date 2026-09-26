@@ -151,3 +151,41 @@ test("shows persistent achievement icons and descriptions", async ({ page }) => 
   await expect(lockedCard).toContainText("Reach Level 5 in Campaign mode.");
   await expect(lockedCard).toContainText("Locked");
 });
+
+test("unlocks /rise and jumps to a debug campaign level", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("tab", { name: "Debug" })).toBeHidden();
+
+  await page.keyboard.type("/rise");
+  await expect(page.getByRole("tab", { name: "Debug" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Debug" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await page.getByLabel("Campaign level").fill("5");
+  await page.getByRole("button", { name: "Jump to level" }).click();
+
+  await expect(page.locator("#game-status")).toHaveText("Starting in 3");
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-level",
+    "5",
+  );
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-game-mode",
+    "campaign",
+  );
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-debug-mode",
+    "true",
+  );
+  await expect(page.locator("#game-board")).toHaveAttribute(
+    "data-boss-level",
+    "true",
+  );
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("garden-snake-achievements"),
+    ),
+  ).toBeNull();
+});

@@ -52,6 +52,7 @@ export function createGameState({
   enemiesDefeated = 0,
   rainbowApplesEaten = 0,
   bossesDefeated = 0,
+  debugMode = false,
 } = {}) {
   const snake = createInitialSnake(gridSize);
   const normalizedGameMode = gameMode === "campaign" ? "campaign" : "classic";
@@ -122,6 +123,7 @@ export function createGameState({
     appleAmmo: 0,
     bossTick: 0,
     bossesDefeated,
+    debugMode: Boolean(debugMode),
     countdown: 0,
     lifecycle,
     completed: false,
@@ -218,6 +220,7 @@ export function advanceCampaignLevel(state, random = Math.random) {
     enemiesDefeated: state.enemiesDefeated,
     rainbowApplesEaten: state.rainbowApplesEaten,
     bossesDefeated: state.bossesDefeated,
+    debugMode: state.debugMode,
   });
 }
 

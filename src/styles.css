@@ -119,6 +119,10 @@ h1 {
   outline-offset: 3px;
 }
 
+.debug-tab[hidden] {
+  display: none;
+}
+
 .tab-panel[hidden] {
   display: none;
 }
@@ -144,6 +148,21 @@ h1 {
 .campaign-progress > span {
   display: flex;
   gap: 6px;
+}
+
+.debug-run-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #293623;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.debug-run-badge[hidden] {
+  display: none;
 }
 
 .campaign-power {
@@ -546,6 +565,72 @@ h1 {
   display: none;
 }
 
+.debug-panel {
+  min-height: 360px;
+  padding: 28px;
+  border: 1px solid rgba(56, 102, 65, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 18px 44px rgba(55, 80, 43, 0.1);
+}
+
+.debug-panel h2 {
+  margin-bottom: 8px;
+}
+
+.debug-panel > p:not(.eyebrow) {
+  color: #5c6b57;
+  line-height: 1.6;
+}
+
+.debug-level-form {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 14px;
+}
+
+.debug-level-form label {
+  font-weight: 800;
+}
+
+.debug-level-form > div {
+  display: flex;
+  gap: 10px;
+}
+
+.debug-level-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 11px 13px;
+  border: 2px solid rgba(56, 102, 65, 0.22);
+  border-radius: 12px;
+  background: #fff;
+  color: #203020;
+  font: inherit;
+}
+
+.debug-level-form button {
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: #386641;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.debug-level-form input:focus-visible,
+.debug-level-form button:focus-visible {
+  outline: 3px solid #386641;
+  outline-offset: 3px;
+}
+
+.debug-status {
+  min-height: 24px;
+  font-weight: 700;
+}
+
 @media (max-width: 520px) {
   .game-shell {
     padding-top: 20px;
@@ -585,6 +670,11 @@ h1 {
   .achievement-state {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .debug-level-form > div {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 

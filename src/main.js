@@ -31,6 +31,7 @@ const score = document.querySelector("#score");
 const highScoreDisplay = document.querySelector("#high-score");
 const campaignProgress = document.querySelector("#campaign-progress");
 const campaignLevel = document.querySelector("#campaign-level");
+const debugRunBadge = document.querySelector("#debug-run-badge");
 const campaignApples = document.querySelector("#campaign-apples");
 const campaignApplesStatus = document.querySelector(
   "#campaign-apples-status",
@@ -57,6 +58,11 @@ const directionButtons = document.querySelectorAll("[data-direction]");
 const tabButtons = document.querySelectorAll("[data-tab]");
 const gamePanel = document.querySelector("#game-panel");
 const achievementsPanel = document.querySelector("#achievements-panel");
+const debugPanel = document.querySelector("#debug-panel");
+const debugTab = document.querySelector("#debug-tab");
+const debugLevelForm = document.querySelector("#debug-level-form");
+const debugLevelInput = document.querySelector("#debug-level-input");
+const debugStatus = document.querySelector("#debug-status");
 const achievementList = document.querySelector("#achievement-list");
 const achievementSummary = document.querySelector("#achievement-summary");
 const achievementNotification = document.querySelector(
@@ -70,6 +76,7 @@ let highScore = readHighScore();
 let pointerStart = null;
 let notificationTimerId = null;
 let unlockedAchievementIds = readUnlockedAchievements();
+let debugSequence = "";
 
 function stopTimer() {
   if (timerId !== null) {
@@ -96,7 +103,7 @@ function scheduleCountdownTick() {
 }
 
 function updateHighScore() {
-  if (state.score <= highScore) {
+  if (state.debugMode || state.score <= highScore) {
     return;
   }
 
@@ -148,6 +155,10 @@ function showAchievementNotification(achievement) {
 }
 
 function updateAchievements() {
+  if (state.debugMode) {
+    return;
+  }
+
   const result = evaluateAchievements(state, unlockedAchievementIds);
 
   if (result.newlyUnlocked.length === 0) {
@@ -177,6 +188,7 @@ function updateInterface() {
   canvas.dataset.bossLevel = String(Boolean(state.bossLevel));
   canvas.dataset.bossHp = String(state.boss?.hp ?? 0);
   canvas.dataset.appleAmmo = String(state.appleAmmo ?? 0);
+  canvas.dataset.debugMode = String(Boolean(state.debugMode));
   canvas.dataset.direction = Object.entries(
     {
       up: { x: 0, y: -1 },
@@ -212,6 +224,7 @@ function updateInterface() {
   pauseAction.textContent = isPaused ? "Resume" : "Pause";
   campaignProgress.hidden = !isCampaign;
   campaignLevel.textContent = String(state.level);
+  debugRunBadge.hidden = !state.debugMode;
   campaignApples.textContent = `${state.applesEaten} / ${state.applesRequired}`;
   campaignEnemies.textContent =
     `${state.enemies?.length ?? 0} active / ` +
@@ -276,9 +289,9 @@ function updateInterface() {
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
     status.textContent = isBossLevel
-      ? `Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/3 - ${state.appleAmmo} apple shots`
+      ? `${state.debugMode ? "Debug " : ""}Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/3 - ${state.appleAmmo} apple shots`
       : isCampaign
-      ? `Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples${
+      ? `${state.debugMode ? "Debug " : ""}Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples${
           state.invincibilityTicks > 0
             ? ` - invincible for ${state.invincibilityTicks} moves`
             : ""
@@ -399,17 +412,21 @@ function resizeCanvas() {
 }
 
 function selectTab(tabName) {
-  if (tabName === "achievements" && state.lifecycle === "running") {
+  const showGame = tabName === "game";
+  const showAchievements = tabName === "achievements";
+  const showDebug = tabName === "debug";
+
+  if (!showGame && state.lifecycle === "running") {
     togglePause();
   }
 
-  if (tabName === "achievements" && state.lifecycle === "countdown") {
+  if (!showGame && state.lifecycle === "countdown") {
     stopCountdownTimer();
   }
 
-  const showGame = tabName === "game";
   gamePanel.hidden = !showGame;
-  achievementsPanel.hidden = showGame;
+  achievementsPanel.hidden = !showAchievements;
+  debugPanel.hidden = !showDebug;
 
   tabButtons.forEach((button) => {
     button.setAttribute(
@@ -427,6 +444,72 @@ function selectTab(tabName) {
   }
 }
 
+function unlockDebugPanel() {
+  debugTab.hidden = false;
+  debugStatus.textContent = "Debug tools unlocked with /rise.";
+  selectTab("debug");
+  debugLevelInput.focus();
+}
+
+function trackDebugSequence(event) {
+  const target = event.target;
+  const isEditing =
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement;
+
+  if (
+    isEditing ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.key.length !== 1
+  ) {
+    return false;
+  }
+
+  const nextSequence = `${debugSequence}${event.key.toLowerCase()}`;
+
+  if (!"/rise".startsWith(nextSequence)) {
+    debugSequence = event.key === "/" ? "/" : "";
+    return debugSequence === "/";
+  }
+
+  debugSequence = nextSequence;
+
+  if (debugSequence === "/rise") {
+    debugSequence = "";
+    unlockDebugPanel();
+  }
+
+  return true;
+}
+
+function jumpToCampaignLevel(event) {
+  event.preventDefault();
+  const level = Number(debugLevelInput.value);
+
+  if (!Number.isInteger(level) || level < 1 || level > 999) {
+    debugStatus.textContent = "Enter a whole-number level from 1 to 999.";
+    return;
+  }
+
+  stopTimer();
+  stopCountdownTimer();
+  const edgeMode = document.querySelector(
+    'input[name="edge-mode"]:checked',
+  ).value;
+  state = createGameState({
+    edgeMode,
+    gameMode: "campaign",
+    level,
+    debugMode: true,
+  });
+  debugStatus.textContent = `Starting debug Campaign Level ${level}.`;
+  selectTab("game");
+  startLevelCountdown();
+}
+
 primaryAction.addEventListener("click", () => {
   if (state.lifecycle === "paused") {
     togglePause();
@@ -441,6 +524,11 @@ pauseAction.addEventListener("click", togglePause);
 spitAction.addEventListener("click", fireApple);
 
 window.addEventListener("keydown", (event) => {
+  if (trackDebugSequence(event)) {
+    event.preventDefault();
+    return;
+  }
+
   if (gamePanel.hidden) {
     return;
   }
@@ -466,6 +554,8 @@ window.addEventListener("keydown", (event) => {
   event.preventDefault();
   issueDirection(direction);
 });
+
+debugLevelForm.addEventListener("submit", jumpToCampaignLevel);
 
 directionButtons.forEach((button) => {
   button.addEventListener("click", () => {

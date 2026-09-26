@@ -62,6 +62,14 @@ stored locally in the browser and remain available after a reload.
 Every game and Campaign level begins with a three-second countdown. Movement,
 enemies, bosses, projectiles, and controls remain frozen until the countdown
 finishes.
+
+## Debug level jump
+
+Type `/rise` while the page is open to reveal a session-only **Debug** tab.
+Enter a Campaign level from 1 to 999 and choose **Jump to level**. The selected
+level starts with the normal countdown and all of its regular walls, enemies,
+or boss behavior. Debug runs do not unlock achievements or update the saved
+high score.
 - **Walls:** Crossing a board edge ends the game.
 - **Wrap:** Crossing an edge continues from the opposite side.
 

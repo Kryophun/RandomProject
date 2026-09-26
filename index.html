@@ -55,6 +55,18 @@
         >
           Achievements
         </button>
+        <button
+          id="debug-tab"
+          class="tab-button debug-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="debug-panel"
+          data-tab="debug"
+          hidden
+        >
+          Debug
+        </button>
       </nav>
 
       <section
@@ -65,6 +77,9 @@
       >
         <div id="campaign-progress" class="campaign-progress" hidden>
           <strong>Level <span id="campaign-level">1</span></strong>
+          <span id="debug-run-badge" class="debug-run-badge" hidden>
+            Debug run
+          </span>
           <span id="campaign-apples-status">
             Apples
             <strong id="campaign-apples">0 / 3</strong>
@@ -223,6 +238,39 @@
           <p id="achievement-summary">0 of 7 unlocked</p>
         </div>
         <div id="achievement-list" class="achievement-list"></div>
+      </section>
+
+      <section
+        id="debug-panel"
+        class="tab-panel debug-panel"
+        role="tabpanel"
+        aria-labelledby="debug-tab"
+        hidden
+      >
+        <p class="eyebrow">Developer tools</p>
+        <h2>Campaign level jump</h2>
+        <p>
+          Start a temporary Campaign run at any level. Debug runs do not update
+          achievements or the saved high score.
+        </p>
+        <form id="debug-level-form" class="debug-level-form">
+          <label for="debug-level-input">Campaign level</label>
+          <div>
+            <input
+              id="debug-level-input"
+              type="number"
+              min="1"
+              max="999"
+              step="1"
+              value="5"
+              required
+            />
+            <button type="submit">Jump to level</button>
+          </div>
+        </form>
+        <p id="debug-status" class="debug-status" aria-live="polite">
+          Choose a level from 1 to 999.
+        </p>
       </section>
 
       <div

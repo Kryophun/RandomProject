@@ -367,6 +367,7 @@ describe("game updates", () => {
         totalApplesEaten: 9,
         enemiesDefeated: 4,
         rainbowApplesEaten: 1,
+        debugMode: true,
       }),
       lifecycle: "level-complete",
       level: 2,
@@ -381,6 +382,7 @@ describe("game updates", () => {
     expect(next.totalApplesEaten).toBe(9);
     expect(next.enemiesDefeated).toBe(4);
     expect(next.rainbowApplesEaten).toBe(1);
+    expect(next.debugMode).toBe(true);
     expect(next.applesRequired).toBe(7);
     expect(next.walls.length).toBeGreaterThan(completed.walls.length);
   });

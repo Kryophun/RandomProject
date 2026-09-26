@@ -163,7 +163,7 @@ test("purchases the root upgrade and unlocks two branches", async ({ page }) => 
   await page.reload();
   await page.getByRole("tab", { name: "Upgrades" }).click();
 
-  await expect(page.locator(".upgrade-node")).toHaveCount(15);
+  await expect(page.locator(".upgrade-node")).toHaveCount(20);
   await expect(page.getByLabel("Available upgrade points")).toContainText(
     "50",
   );

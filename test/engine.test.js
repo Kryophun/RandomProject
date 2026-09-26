@@ -73,6 +73,22 @@ describe("game state", () => {
     expect(state.applesRequired).toBe(0);
   });
 
+  it("creates the unique final boss arena at Level 50", () => {
+    const state = createGameState({
+      gameMode: "campaign",
+      level: 50,
+      random: () => 0,
+    });
+
+    expect(state.boss).toMatchObject({
+      type: "final",
+      hp: 12,
+      hitRadius: 2,
+    });
+    expect(state.enemies).toHaveLength(0);
+    expect(state.bossLevel).toBe(true);
+  });
+
   it("applies purchased starting ammo on boss levels", () => {
     const state = createGameState({
       gameMode: "campaign",

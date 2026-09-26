@@ -151,6 +151,81 @@ export const UPGRADES = Object.freeze([
     prerequisites: ["deep-pockets"],
     effects: Object.freeze({ bossAmmoBonus: 2 }),
   }),
+  Object.freeze({
+    id: "eternal-rainbow",
+    icon: "🔮",
+    title: "Eternal Rainbow",
+    description:
+      "Rainbow power lasts 50 additional moves and grants five more score.",
+    cost: 350,
+    depth: 4,
+    prerequisites: ["prismatic-heart", "rainbow-windfall"],
+    effects: Object.freeze({
+      invincibilityBonus: 50,
+      rainbowScoreBonus: 5,
+    }),
+  }),
+  Object.freeze({
+    id: "enemy-stasis",
+    icon: "❄️",
+    title: "Enemy Stasis",
+    description:
+      "Enemies wait two additional ticks and grant two more score.",
+    cost: 380,
+    depth: 4,
+    prerequisites: ["royal-bounty", "tangled-time"],
+    effects: Object.freeze({
+      enemyMoveIntervalBonus: 2,
+      enemyScoreBonus: 2,
+    }),
+  }),
+  Object.freeze({
+    id: "boss-dominator",
+    icon: "🛡️",
+    title: "Boss Dominator",
+    description:
+      "Apple shots gain two boss damage and bosses act 50% slower.",
+    cost: 420,
+    depth: 4,
+    prerequisites: ["siege-apples", "boss-hourglass"],
+    effects: Object.freeze({
+      bossDamageBonus: 2,
+      bossIntervalMultiplier: 0.5,
+    }),
+  }),
+  Object.freeze({
+    id: "arsenal-overflow",
+    icon: "📦",
+    title: "Arsenal Overflow",
+    description:
+      "Start with three more boss shots and gain two more per apple.",
+    cost: 400,
+    depth: 4,
+    prerequisites: ["loaded-vault", "endless-quiver"],
+    effects: Object.freeze({
+      startingBossAmmo: 3,
+      bossAmmoBonus: 2,
+    }),
+  }),
+  Object.freeze({
+    id: "garden-ascendant",
+    icon: "🌟",
+    title: "Garden Ascendant",
+    description:
+      "Movement is 15% slower and regular apples grant three more score.",
+    cost: 800,
+    depth: 5,
+    prerequisites: [
+      "eternal-rainbow",
+      "enemy-stasis",
+      "boss-dominator",
+      "arsenal-overflow",
+    ],
+    effects: Object.freeze({
+      tickIntervalMultiplier: 0.15,
+      appleScoreBonus: 3,
+    }),
+  }),
 ]);
 
 const upgradeIds = new Set(UPGRADES.map((upgrade) => upgrade.id));
@@ -168,9 +243,15 @@ export function calculateRunUpgradePoints(state) {
   const levelModifier = 1 + (state.levelsCompleted ?? 0) / 10;
   const milestoneModifier =
     1 + Math.floor((state.levelsCompleted ?? 0) / 5) / 10;
+  const finalBossModifier =
+    (state.levelsCompleted ?? 0) >= 50 ? 3 : 1;
 
   return Math.floor(
-    basePoints * levelModifier * milestoneModifier + Number.EPSILON,
+    basePoints *
+      levelModifier *
+      milestoneModifier *
+      finalBossModifier +
+      Number.EPSILON,
   );
 }
 

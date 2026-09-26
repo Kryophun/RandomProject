@@ -184,6 +184,10 @@ export function isBossLevel(level) {
   return level > 0 && level % 5 === 0;
 }
 
+export function isFinalBossLevel(level) {
+  return level === 50;
+}
+
 export function createCampaignBoss(gridSize, level, snake, walls) {
   if (!isBossLevel(level)) {
     return null;
@@ -192,6 +196,8 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
   const blocked = new Set([...snake, ...walls].map(positionKey));
   const head = snake[0];
   const candidates = [];
+  const finalBoss = isFinalBossLevel(level);
+  const hitRadius = finalBoss ? 2 : 1;
 
   for (let y = 0; y < gridSize; y += 1) {
     for (let x = 0; x < gridSize; x += 1) {
@@ -200,7 +206,7 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
       if (
         !isBossCenterBlocked(
           position,
-          { hitRadius: 1 },
+          { hitRadius },
           gridSize,
           blocked,
         )
@@ -216,7 +222,12 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
 
   candidates.sort((first, second) => second.distance - first.distance);
   const encounter = level / 5;
-  const bossType = BOSS_TYPES[(encounter - 1) % BOSS_TYPES.length];
+  const bossType = finalBoss
+    ? {
+        type: "final",
+        name: "The Garden Tyrant",
+      }
+    : BOSS_TYPES[(encounter - 1) % BOSS_TYPES.length];
   const spawnPool = candidates.slice(0, Math.max(1, gridSize));
   const spawn = spawnPool[(encounter * 7) % spawnPool.length];
 
@@ -224,9 +235,9 @@ export function createCampaignBoss(gridSize, level, snake, walls) {
     ...bossType,
     x: spawn.x,
     y: spawn.y,
-    hp: 3,
-    maxHp: 3,
-    hitRadius: 1,
+    hp: finalBoss ? 12 : 3,
+    maxHp: finalBoss ? 12 : 3,
+    hitRadius,
     level,
     direction: { x: -1, y: 0 },
   };
@@ -255,29 +266,47 @@ export function advanceBoss(
   const cadence = (base) =>
     Math.max(1, Math.round(base * speedMultiplier));
 
-  if (boss.type === "hunter" && tick % cadence(6) === 0) {
+  if (
+    (boss.type === "hunter" || boss.type === "final") &&
+    tick % cadence(boss.type === "final" ? 5 : 6) === 0
+  ) {
     nextBoss = moveToward(boss, target, gridSize, blocked);
   }
 
-  if (boss.type === "charger" && tick % cadence(12) === 0) {
-    nextBoss = moveToward(boss, target, gridSize, blocked, 2);
+  if (
+    (boss.type === "charger" || boss.type === "final") &&
+    tick % cadence(12) === 0
+  ) {
+    nextBoss = moveToward(nextBoss, target, gridSize, blocked, 2);
   }
 
-  if (boss.type === "turret" && tick % cadence(9) === 0) {
-    const [direction] = directionsToward(boss, target);
+  if (
+    (boss.type === "turret" || boss.type === "final") &&
+    tick % cadence(boss.type === "final" ? 7 : 9) === 0
+  ) {
+    const [direction] = directionsToward(nextBoss, target);
 
     projectile = direction
       ? {
-          x: boss.x,
-          y: boss.y,
+          x: nextBoss.x,
+          y: nextBoss.y,
           direction,
         }
       : null;
   }
 
   const spawnInterval =
-    boss.type === "hunter" ? 18 : boss.type === "turret" ? 16 : 20;
-  const maxMinions = Math.min(4, 1 + Math.floor(boss.level / 10));
+    boss.type === "final"
+      ? 8
+      : boss.type === "hunter"
+        ? 18
+        : boss.type === "turret"
+          ? 16
+          : 20;
+  const maxMinions =
+    boss.type === "final"
+      ? 6
+      : Math.min(4, 1 + Math.floor(boss.level / 10));
   const spawnedEnemy =
     tick % cadence(spawnInterval) === 0 && enemies.length < maxMinions
       ? createSpawnedEnemy(nextBoss, {

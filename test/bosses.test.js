@@ -3,6 +3,7 @@ import {
   advanceBoss,
   bossOccupiesPosition,
   createCampaignBoss,
+  isFinalBossLevel,
   isBossLevel,
 } from "../src/game/bosses.js";
 
@@ -18,6 +19,8 @@ describe("campaign bosses", () => {
     expect(isBossLevel(5)).toBe(true);
     expect(isBossLevel(10)).toBe(true);
     expect(isBossLevel(15)).toBe(true);
+    expect(isFinalBossLevel(50)).toBe(true);
+    expect(isFinalBossLevel(55)).toBe(false);
   });
 
   it("cycles through different boss attack types", () => {
@@ -26,6 +29,18 @@ describe("campaign bosses", () => {
     expect(createCampaignBoss(20, 15, snake, []).type).toBe("charger");
     expect(createCampaignBoss(20, 20, snake, []).type).toBe("hunter");
     expect(createCampaignBoss(20, 5, snake, []).hitRadius).toBe(1);
+  });
+
+  it("creates a larger, tougher final boss at Level 50", () => {
+    const boss = createCampaignBoss(20, 50, snake, []);
+
+    expect(boss).toMatchObject({
+      type: "final",
+      name: "The Garden Tyrant",
+      hp: 12,
+      maxHp: 12,
+      hitRadius: 2,
+    });
   });
 
   it("uses a multi-cell hit area", () => {
@@ -169,5 +184,30 @@ describe("campaign bosses", () => {
 
     expect(waiting.boss).toMatchObject({ x: 2, y: 2 });
     expect(moved.boss).toMatchObject({ x: 3, y: 2 });
+  });
+
+  it("combines pursuit and ranged attacks for the final boss", () => {
+    const result = advanceBoss(
+      {
+        x: 3,
+        y: 3,
+        type: "final",
+        level: 50,
+        hitRadius: 2,
+        direction: { x: 1, y: 0 },
+      },
+      {
+        gridSize: 20,
+        snake: [{ x: 15, y: 3 }],
+        tick: 35,
+      },
+    );
+
+    expect(result.boss.x).toBe(4);
+    expect(result.projectile).toMatchObject({
+      x: 4,
+      y: 3,
+      direction: { x: 1, y: 0 },
+    });
   });
 });

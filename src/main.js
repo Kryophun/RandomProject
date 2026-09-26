@@ -245,21 +245,26 @@ function renderUpgradeDetails() {
 
 function renderUpgradeTree() {
   const positions = new Map([
-    ["calm-roots", [50, 12]],
-    ["orchard-wisdom", [30, 34]],
-    ["boss-training", [70, 34]],
-    ["rainbow-reservoir", [12.5, 58]],
-    ["hunter-bounty", [37.5, 58]],
-    ["heavy-spit", [62.5, 58]],
-    ["deep-pockets", [87.5, 58]],
-    ["prismatic-heart", [6.25, 86]],
-    ["rainbow-windfall", [18.75, 86]],
-    ["royal-bounty", [31.25, 86]],
-    ["tangled-time", [43.75, 86]],
-    ["siege-apples", [56.25, 86]],
-    ["boss-hourglass", [68.75, 86]],
-    ["loaded-vault", [81.25, 86]],
-    ["endless-quiver", [93.75, 86]],
+    ["calm-roots", [50, 8]],
+    ["orchard-wisdom", [30, 22]],
+    ["boss-training", [70, 22]],
+    ["rainbow-reservoir", [12.5, 38]],
+    ["hunter-bounty", [37.5, 38]],
+    ["heavy-spit", [62.5, 38]],
+    ["deep-pockets", [87.5, 38]],
+    ["prismatic-heart", [6.25, 55]],
+    ["rainbow-windfall", [18.75, 55]],
+    ["royal-bounty", [31.25, 55]],
+    ["tangled-time", [43.75, 55]],
+    ["siege-apples", [56.25, 55]],
+    ["boss-hourglass", [68.75, 55]],
+    ["loaded-vault", [81.25, 55]],
+    ["endless-quiver", [93.75, 55]],
+    ["eternal-rainbow", [12.5, 74]],
+    ["enemy-stasis", [37.5, 74]],
+    ["boss-dominator", [62.5, 74]],
+    ["arsenal-overflow", [87.5, 74]],
+    ["garden-ascendant", [50, 92]],
   ]);
   const nodes = UPGRADES.map((upgrade) => {
     const button = document.createElement("button");
@@ -475,7 +480,7 @@ function updateInterface() {
   } else {
     const modeLabel = state.edgeMode === "wrap" ? "Wrap" : "Walls";
     status.textContent = isBossLevel
-      ? `${state.debugMode ? "Debug " : ""}Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/3 - ${state.appleAmmo} apple shots - ${state.enemies?.length ?? 0} minions`
+      ? `${state.debugMode ? "Debug " : ""}Boss Level ${state.level} - ${state.boss?.name} HP ${state.boss?.hp}/${state.boss?.maxHp} - ${state.appleAmmo} apple shots - ${state.enemies?.length ?? 0} minions`
       : isCampaign
       ? `${state.debugMode ? "Debug " : ""}Campaign level ${state.level} - ${state.applesEaten}/${state.applesRequired} apples${
           state.invincibilityTicks > 0

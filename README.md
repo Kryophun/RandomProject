@@ -56,12 +56,14 @@ That subtotal is multiplied by `1 + (completed levels / 10)`. A second
 milestone multiplier is added every five completed levels:
 `1 + (floor(completed levels / 5) / 10)`. Completing Level 5 therefore uses
 `1.5x × 1.1x`, Level 10 uses `2x × 1.2x`, and Level 15 uses `2.5x × 1.3x`.
+Completing the unique Level 50 final boss adds a separate `3x` multiplier to
+the entire run reward.
 
-Open the **Upgrades** tab to spend persistent points in a branching 15-node
-tree. Purchasing the root unlocks two branches, each branch unlocks two
-stronger upgrades, and those four upgrades each unlock two large fourth-tier
-abilities. Purchased effects apply to normal and debug gameplay, but debug runs
-do not earn points.
+Open the **Upgrades** tab to spend persistent points in a branching 20-node
+tree. After the 15-node branching section, pairs of upgrades merge into four
+capstones, and purchasing all four capstones unlocks one final central upgrade.
+Purchased effects apply to normal and debug gameplay, but debug runs do not
+earn points.
 
 ## Game modes
 
@@ -82,6 +84,9 @@ do not earn points.
   destroy minions as well as damage the boss. Bosses use a large multi-cell
   target area so apple shots that pass near their visible body still count as
   hits.
+- **Final boss:** Level 50 contains The Garden Tyrant, a 12-health, larger boss
+  that pursues, fires, charges, and summons up to six minions. Defeating it
+  activates the run's additional 3x upgrade-point multiplier.
 
 Every game and Campaign level begins with a three-second countdown. Movement,
 enemies, bosses, projectiles, and controls remain frozen until the countdown

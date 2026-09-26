@@ -33,6 +33,12 @@ describe("run upgrade points", () => {
         levelsCompleted: 5,
       }),
     ).toBe(16);
+    expect(
+      calculateRunUpgradePoints({
+        totalApplesEaten: 10,
+        levelsCompleted: 50,
+      }),
+    ).toBe(360);
   });
 
   it("does not reward debug runs", () => {
@@ -100,6 +106,47 @@ describe("upgrade tree", () => {
 
     expect(isUpgradeAvailable(prismaticHeart, purchased)).toBe(true);
     expect(isUpgradeAvailable(rainbowWindfall, purchased)).toBe(true);
+  });
+
+  it("unlocks merged capstones and the final upgrade", () => {
+    const capstoneIds = [
+      "eternal-rainbow",
+      "enemy-stasis",
+      "boss-dominator",
+      "arsenal-overflow",
+    ];
+    const branchPurchases = [
+      "calm-roots",
+      "orchard-wisdom",
+      "boss-training",
+      "rainbow-reservoir",
+      "hunter-bounty",
+      "heavy-spit",
+      "deep-pockets",
+      "prismatic-heart",
+      "rainbow-windfall",
+      "royal-bounty",
+      "tangled-time",
+      "siege-apples",
+      "boss-hourglass",
+      "loaded-vault",
+      "endless-quiver",
+    ];
+
+    for (const id of capstoneIds) {
+      const upgrade = UPGRADES.find((candidate) => candidate.id === id);
+      expect(isUpgradeAvailable(upgrade, branchPurchases)).toBe(true);
+    }
+
+    const finalUpgrade = UPGRADES.find(
+      ({ id }) => id === "garden-ascendant",
+    );
+    expect(
+      isUpgradeAvailable(finalUpgrade, [
+        ...branchPurchases,
+        ...capstoneIds,
+      ]),
+    ).toBe(true);
   });
 
   it("rejects locked or unaffordable purchases", () => {

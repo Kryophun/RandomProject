@@ -194,10 +194,13 @@ function drawBoss(context, boss, cellSize) {
 
   const centerX = (boss.x + 0.5) * cellSize;
   const centerY = (boss.y + 0.5) * cellSize;
-  const radius = cellSize * 0.92;
+  const radius =
+    cellSize * (boss.hitRadius >= 2 ? 2 : 0.92);
 
   context.fillStyle =
-    boss.type === "hunter"
+    boss.type === "final"
+      ? "#3f1d5e"
+      : boss.type === "hunter"
       ? "#9f2f46"
       : boss.type === "turret"
         ? "#6d3f9c"
@@ -231,7 +234,8 @@ function drawBoss(context, boss, cellSize) {
     context.fill();
   }
 
-  const healthWidth = cellSize * 1.9;
+  const healthWidth =
+    cellSize * (boss.hitRadius >= 2 ? 4.1 : 1.9);
   const healthX = centerX - healthWidth / 2;
   const healthY = centerY + radius + cellSize * 0.08;
   context.fillStyle = "rgba(32, 48, 32, 0.35)";

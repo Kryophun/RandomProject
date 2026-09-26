@@ -361,6 +361,26 @@
         <p id="debug-status" class="debug-status" aria-live="polite">
           Choose a level from 1 to 999.
         </p>
+        <hr class="debug-divider" />
+        <h3>Add upgrade points</h3>
+        <form id="debug-points-form" class="debug-level-form">
+          <label for="debug-points-input">Points to add</label>
+          <div>
+            <input
+              id="debug-points-input"
+              type="number"
+              min="1"
+              max="1000000"
+              step="1"
+              value="100"
+              required
+            />
+            <button type="submit">Add points</button>
+          </div>
+        </form>
+        <p id="debug-points-status" class="debug-status" aria-live="polite">
+          Add 1 to 1,000,000 persistent points.
+        </p>
       </section>
 
       <div

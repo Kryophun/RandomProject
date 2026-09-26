@@ -87,6 +87,9 @@ const debugTab = document.querySelector("#debug-tab");
 const debugLevelForm = document.querySelector("#debug-level-form");
 const debugLevelInput = document.querySelector("#debug-level-input");
 const debugStatus = document.querySelector("#debug-status");
+const debugPointsForm = document.querySelector("#debug-points-form");
+const debugPointsInput = document.querySelector("#debug-points-input");
+const debugPointsStatus = document.querySelector("#debug-points-status");
 const secretCommandInput = document.querySelector(
   "#secret-command-input",
 );
@@ -717,6 +720,27 @@ function handleSecretCommandInput() {
   unlockDebugPanel();
 }
 
+function addDebugUpgradePoints(event) {
+  event.preventDefault();
+  const amount = Number(debugPointsInput.value);
+
+  if (!Number.isInteger(amount) || amount < 1 || amount > 1_000_000) {
+    debugPointsStatus.textContent =
+      "Enter a whole number from 1 to 1,000,000.";
+    return;
+  }
+
+  upgradeProgress = {
+    ...upgradeProgress,
+    points: upgradeProgress.points + amount,
+  };
+  writeUpgradeProgress(upgradeProgress);
+  renderUpgradeTree();
+  debugPointsStatus.textContent =
+    `Added ${amount.toLocaleString()} upgrade points.`;
+  showNotification(`⬆️ Debug: +${amount.toLocaleString()} upgrade points`);
+}
+
 primaryAction.addEventListener("click", () => {
   if (state.lifecycle === "paused") {
     togglePause();
@@ -763,6 +787,7 @@ window.addEventListener("keydown", (event) => {
 });
 
 debugLevelForm.addEventListener("submit", jumpToCampaignLevel);
+debugPointsForm.addEventListener("submit", addDebugUpgradePoints);
 secretCommandInput.addEventListener("input", handleSecretCommandInput);
 purchaseUpgradeButton.addEventListener("click", buySelectedUpgrade);
 

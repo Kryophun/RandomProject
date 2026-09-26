@@ -240,3 +240,24 @@ test("accepts /rise in the hidden bottom-left command box", async ({
   );
   await expect(page.getByLabel("Campaign level")).toBeFocused();
 });
+
+test("adds persistent upgrade points from the debug menu", async ({ page }) => {
+  await page.goto("/");
+  await page.getByLabel("Command").fill("/rise");
+  await page.getByLabel("Points to add").fill("250");
+  await page.getByRole("button", { name: "Add points" }).click();
+
+  await expect(page.locator("#debug-points-status")).toHaveText(
+    "Added 250 upgrade points.",
+  );
+  await page.getByRole("tab", { name: "Upgrades" }).click();
+  await expect(page.getByLabel("Available upgrade points")).toContainText(
+    "250",
+  );
+
+  await page.reload();
+  await page.getByRole("tab", { name: "Upgrades" }).click();
+  await expect(page.getByLabel("Available upgrade points")).toContainText(
+    "250",
+  );
+});

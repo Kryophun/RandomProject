@@ -98,7 +98,8 @@ Type `/rise` while the page is open to reveal a session-only **Debug** tab.
 Enter a Campaign level from 1 to 999 and choose **Jump to level**. The selected
 level starts with the normal countdown and all of its regular walls, enemies,
 or boss behavior. Debug runs do not unlock achievements or update the saved
-high score.
+high score. The same Debug tab can add 1 to 1,000,000 persistent upgrade points
+at a time for testing the upgrade tree.
 - **Walls:** Crossing a board edge ends the game.
 - **Wrap:** Crossing an edge continues from the opposite side.
 

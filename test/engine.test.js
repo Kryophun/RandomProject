@@ -73,6 +73,16 @@ describe("game state", () => {
     expect(state.applesRequired).toBe(0);
   });
 
+  it("applies purchased starting ammo on boss levels", () => {
+    const state = createGameState({
+      gameMode: "campaign",
+      level: 5,
+      upgrades: { startingBossAmmo: 1 },
+    });
+
+    expect(state.appleAmmo).toBe(1);
+  });
+
   it("counts down three seconds before entering the running state", () => {
     const ready = createGameState();
     const three = beginLevelCountdown(ready);
@@ -150,6 +160,25 @@ describe("game updates", () => {
     expect(next.score).toBe(1);
     expect(next.totalApplesEaten).toBe(1);
     expect(next.snake).not.toContainEqual(next.fruit);
+  });
+
+  it("applies the purchased apple score bonus", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          upgrades: { appleScoreBonus: 1 },
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      fruit: { x: 5, y: 4 },
+    };
+
+    expect(stepGame(state, () => 0).score).toBe(2);
   });
 
   it("ends the game when the snake hits a wall", () => {
@@ -337,6 +366,29 @@ describe("game updates", () => {
     expect(next.rainbowApplesEaten).toBe(1);
   });
 
+  it("extends rainbow power with the purchased duration upgrade", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          upgrades: { invincibilityBonus: 20 },
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      enemies: [],
+      fruit: { x: 0, y: 0 },
+      rainbowApple: { x: 5, y: 4 },
+    };
+
+    expect(stepGame(state).invincibilityTicks).toBe(65);
+  });
+
   it("completes a campaign level after its required apple", () => {
     const state = {
       ...startGame(createGameState({ gridSize: 8, gameMode: "campaign" })),
@@ -357,6 +409,7 @@ describe("game updates", () => {
     expect(next.applesEaten).toBe(3);
     expect(next.score).toBe(1);
     expect(next.fruit).toBeNull();
+    expect(next.levelsCompleted).toBe(1);
   });
 
   it("advances to a harder campaign level while preserving score", () => {
@@ -367,6 +420,7 @@ describe("game updates", () => {
         totalApplesEaten: 9,
         enemiesDefeated: 4,
         rainbowApplesEaten: 1,
+        levelsCompleted: 2,
         debugMode: true,
       }),
       lifecycle: "level-complete",
@@ -382,6 +436,7 @@ describe("game updates", () => {
     expect(next.totalApplesEaten).toBe(9);
     expect(next.enemiesDefeated).toBe(4);
     expect(next.rainbowApplesEaten).toBe(1);
+    expect(next.levelsCompleted).toBe(2);
     expect(next.debugMode).toBe(true);
     expect(next.applesRequired).toBe(7);
     expect(next.walls.length).toBeGreaterThan(completed.walls.length);
@@ -420,6 +475,38 @@ describe("game updates", () => {
     expect(next.totalApplesEaten).toBe(1);
     expect(next.lifecycle).toBe("running");
     expect(next.fruit).not.toBeNull();
+  });
+
+  it("loads extra ammunition with the purchased boss upgrade", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 5,
+          upgrades: { bossAmmoBonus: 1 },
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      boss: {
+        x: 7,
+        y: 7,
+        type: "hunter",
+        name: "The Hunter",
+        hp: 3,
+        maxHp: 3,
+        hitRadius: 1,
+        direction: DIRECTIONS.left,
+      },
+      fruit: { x: 5, y: 4 },
+    };
+
+    expect(stepGame(state, () => 0).appleAmmo).toBe(2);
   });
 
   it("fires an apple projectile in the snake's direction", () => {
@@ -572,6 +659,39 @@ describe("game updates", () => {
     expect(state.boss.hp).toBe(0);
     expect(state.lifecycle).toBe("level-complete");
     expect(state.bossesDefeated).toBe(1);
+    expect(state.levelsCompleted).toBe(1);
+  });
+
+  it("makes purchased heavy shots deal two boss damage", () => {
+    const state = {
+      ...startGame(
+        createGameState({
+          gridSize: 8,
+          gameMode: "campaign",
+          level: 5,
+          upgrades: { bossDamageBonus: 1 },
+        }),
+      ),
+      snake: [
+        { x: 4, y: 4 },
+        { x: 3, y: 4 },
+        { x: 2, y: 4 },
+      ],
+      walls: [],
+      boss: {
+        x: 5,
+        y: 4,
+        type: "hunter",
+        name: "The Hunter",
+        hp: 3,
+        maxHp: 3,
+        hitRadius: 1,
+        direction: DIRECTIONS.left,
+      },
+      appleAmmo: 1,
+    };
+
+    expect(spitApple(state).boss.hp).toBe(1);
   });
 
   it("ends the game when a boss projectile reaches the snake", () => {

@@ -152,6 +152,39 @@ test("shows persistent achievement icons and descriptions", async ({ page }) => 
   await expect(lockedCard).toContainText("Locked");
 });
 
+test("purchases the root upgrade and unlocks two branches", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "garden-snake-upgrades",
+      JSON.stringify({ points: 50, purchased: [] }),
+    );
+  });
+  await page.reload();
+  await page.getByRole("tab", { name: "Upgrades" }).click();
+
+  await expect(page.getByLabel("Available upgrade points")).toContainText(
+    "50",
+  );
+  await expect(
+    page.getByRole("button", { name: /Calm Roots.*Available/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Purchase for 10" }).click();
+
+  await expect(page.getByLabel("Available upgrade points")).toContainText(
+    "40",
+  );
+  await expect(
+    page.getByRole("button", { name: /Calm Roots.*Purchased/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Orchard Wisdom.*Available/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Boss Training.*Available/ }),
+  ).toBeVisible();
+});
+
 test("unlocks /rise and jumps to a debug campaign level", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("tab", { name: "Debug" })).toBeHidden();

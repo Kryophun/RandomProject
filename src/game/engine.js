@@ -55,6 +55,8 @@ export function createGameState({
   rainbowApplesEaten = 0,
   bossesDefeated = 0,
   debugMode = false,
+  upgrades = {},
+  levelsCompleted = 0,
 } = {}) {
   const snake = createInitialSnake(gridSize);
   const normalizedGameMode = gameMode === "campaign" ? "campaign" : "classic";
@@ -122,10 +124,16 @@ export function createGameState({
     boss,
     bossProjectiles: [],
     appleProjectiles: [],
-    appleAmmo: 0,
+    appleAmmo: campaign.bossLevel
+      ? upgrades.startingBossAmmo ?? 0
+      : 0,
     bossTick: 0,
     bossesDefeated,
     debugMode: Boolean(debugMode),
+    upgrades,
+    levelsCompleted,
+    upgradePointsAwarded: false,
+    lastUpgradePointsEarned: 0,
     countdown: 0,
     lifecycle,
     completed: false,
@@ -223,6 +231,8 @@ export function advanceCampaignLevel(state, random = Math.random) {
     rainbowApplesEaten: state.rainbowApplesEaten,
     bossesDefeated: state.bossesDefeated,
     debugMode: state.debugMode,
+    upgrades: state.upgrades,
+    levelsCompleted: state.levelsCompleted,
   });
 }
 
@@ -257,6 +267,7 @@ function advanceProjectiles(state) {
   let enemiesDefeated = state.enemiesDefeated ?? 0;
   let score = state.score;
   let bossesDefeated = state.bossesDefeated ?? 0;
+  let levelsCompleted = state.levelsCompleted ?? 0;
   let lifecycle = state.lifecycle;
   const appleProjectiles = [];
 
@@ -272,14 +283,21 @@ function advanceProjectiles(state) {
     if (hitEnemy) {
       enemies = enemies.filter((enemy) => enemy.id !== hitEnemy.id);
       enemiesDefeated += 1;
-      score += ENEMY_KILL_SCORE;
+      score +=
+        ENEMY_KILL_SCORE + (state.upgrades?.enemyScoreBonus ?? 0);
     } else if (boss && bossOccupiesPosition(boss, next)) {
-      boss = { ...boss, hp: boss.hp - 1 };
+      boss = {
+        ...boss,
+        hp:
+          boss.hp -
+          (1 + (state.upgrades?.bossDamageBonus ?? 0)),
+      };
       score += 2;
 
       if (boss.hp <= 0) {
         lifecycle = "level-complete";
         bossesDefeated += 1;
+        levelsCompleted += 1;
         break;
       }
     } else {
@@ -295,6 +313,7 @@ function advanceProjectiles(state) {
       enemiesDefeated,
       score,
       bossesDefeated,
+      levelsCompleted,
       appleProjectiles: [],
       lifecycle,
     };
@@ -317,6 +336,7 @@ function advanceProjectiles(state) {
         enemiesDefeated,
         score,
         bossesDefeated,
+        levelsCompleted,
         appleProjectiles,
         bossProjectiles: [],
         lifecycle: "game-over",
@@ -333,6 +353,7 @@ function advanceProjectiles(state) {
     enemiesDefeated,
     score,
     bossesDefeated,
+    levelsCompleted,
     appleProjectiles,
     bossProjectiles,
   };
@@ -374,12 +395,20 @@ export function spitApple(state) {
       ...firedState,
       enemies: state.enemies.filter((enemy) => enemy.id !== hitEnemy.id),
       enemiesDefeated: (state.enemiesDefeated ?? 0) + 1,
-      score: state.score + ENEMY_KILL_SCORE,
+      score:
+        state.score +
+        ENEMY_KILL_SCORE +
+        (state.upgrades?.enemyScoreBonus ?? 0),
     };
   }
 
   if (bossOccupiesPosition(state.boss, next)) {
-    const boss = { ...state.boss, hp: state.boss.hp - 1 };
+    const boss = {
+      ...state.boss,
+      hp:
+        state.boss.hp -
+        (1 + (state.upgrades?.bossDamageBonus ?? 0)),
+    };
     const defeated = boss.hp <= 0;
 
     return {
@@ -388,6 +417,8 @@ export function spitApple(state) {
       score: state.score + 2,
       bossesDefeated:
         (state.bossesDefeated ?? 0) + (defeated ? 1 : 0),
+      levelsCompleted:
+        (state.levelsCompleted ?? 0) + (defeated ? 1 : 0),
       lifecycle: defeated ? "level-complete" : "running",
     };
   }
@@ -486,7 +517,8 @@ export function stepGame(state, random = Math.random) {
 
     enemies = enemies.filter((enemy) => enemy.id !== headEnemy.id);
     enemiesDefeated += 1;
-    score += ENEMY_KILL_SCORE;
+    score +=
+      ENEMY_KILL_SCORE + (state.upgrades?.enemyScoreBonus ?? 0);
   }
 
   const snake = [nextHead, ...state.snake];
@@ -500,17 +532,19 @@ export function stepGame(state, random = Math.random) {
   let bossProjectiles = state.bossProjectiles ?? [];
   let bossTick = (state.bossTick ?? 0) + 1;
   let lifecycle = "running";
+  let levelsCompleted = state.levelsCompleted ?? 0;
   let invincibilityTicks = ateRainbow
-    ? INVINCIBILITY_TICKS
+    ? INVINCIBILITY_TICKS +
+      (state.upgrades?.invincibilityBonus ?? 0)
     : Math.max(0, (state.invincibilityTicks ?? 0) - 1);
 
   if (ateFruit) {
-    score += 1;
+    score += 1 + (state.upgrades?.appleScoreBonus ?? 0);
     applesEaten += 1;
     totalApplesEaten += 1;
 
     if (state.bossLevel) {
-      appleAmmo += 1;
+      appleAmmo += 1 + (state.upgrades?.bossAmmoBonus ?? 0);
       fruit = placeFruit(
         state.gridSize,
         snake,
@@ -528,6 +562,7 @@ export function stepGame(state, random = Math.random) {
     ) {
       fruit = null;
       lifecycle = "level-complete";
+      levelsCompleted += 1;
     } else {
       fruit = placeFruit(
         state.gridSize,
@@ -582,7 +617,10 @@ export function stepGame(state, random = Math.random) {
           (enemy) => !collidingEnemyIds.has(enemy.id),
         );
         enemiesDefeated += collidingEnemyIds.size;
-        score += collidingEnemyIds.size * ENEMY_KILL_SCORE;
+        score +=
+          collidingEnemyIds.size *
+          (ENEMY_KILL_SCORE +
+            (state.upgrades?.enemyScoreBonus ?? 0));
       }
     }
   }
@@ -638,6 +676,7 @@ export function stepGame(state, random = Math.random) {
     bossProjectiles,
     appleAmmo,
     bossTick,
+    levelsCompleted,
     speedTier: getSpeedTier(score),
     completed,
     lifecycle: completed ? "game-over" : lifecycle,

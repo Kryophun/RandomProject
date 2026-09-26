@@ -12,6 +12,7 @@ grid-based Snake games.
   a temporary rainbow power-up
 - Persistent achievements with milestone icons and descriptions
 - Boss battles every five Campaign levels with apple-projectile combat
+- Persistent run points and a branching gameplay upgrade tree
 - Increasing speed as the score grows
 - Pause and resume
 - Locally saved high score
@@ -42,6 +43,21 @@ Open the **Achievements** tab to see every milestone and its locked or unlocked
 state. Achievements include eating apples, growing the snake, using the rainbow
 apple, defeating enemies, and reaching Campaign Levels 3 and 5. Unlocks are
 stored locally in the browser and remain available after a reload.
+
+## Upgrades
+
+Every completed non-debug run awards upgrade points:
+
+```text
+apples + (enemies x 3) + (bosses x 10) + (rainbow apples x 2)
+```
+
+That subtotal is multiplied by `1 + (completed levels / 10)`, so completing
+Level 1 uses `1.1x` and completing Level 10 uses `2x`. Open the **Upgrades** tab
+to spend persistent points in a branching tree. Purchasing the root unlocks two
+branches, and each branch unlocks two stronger, more expensive upgrades.
+Purchased effects apply to normal and debug gameplay, but debug runs do not
+earn points.
 
 ## Game modes
 

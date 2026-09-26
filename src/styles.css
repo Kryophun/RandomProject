@@ -90,6 +90,7 @@ h1 {
 .tab-list {
   display: flex;
   gap: 8px;
+  overflow-x: auto;
   margin-bottom: 16px;
   padding: 5px;
   border: 1px solid rgba(56, 102, 65, 0.12);
@@ -565,6 +566,195 @@ h1 {
   display: none;
 }
 
+.upgrades-panel {
+  padding: 24px;
+  border: 1px solid rgba(56, 102, 65, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 18px 44px rgba(55, 80, 43, 0.1);
+}
+
+.upgrades-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.upgrades-heading h2 {
+  margin-bottom: 0;
+}
+
+.upgrade-points {
+  min-width: 92px;
+  padding: 9px 14px;
+  border: 2px solid rgba(56, 102, 65, 0.16);
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+}
+
+.upgrade-points span {
+  display: block;
+  color: #5c6b57;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.upgrade-points strong {
+  font-size: 1.55rem;
+}
+
+.upgrade-formula {
+  margin: 16px 0 8px;
+  color: #5c6b57;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.upgrade-tree-scroll {
+  overflow-x: auto;
+  padding: 12px 0;
+}
+
+.upgrade-tree {
+  position: relative;
+  width: 100%;
+  min-width: 620px;
+  height: 520px;
+}
+
+.upgrade-connectors {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.upgrade-connectors line {
+  stroke: rgba(56, 102, 65, 0.25);
+  stroke-width: 0.7;
+  vector-effect: non-scaling-stroke;
+}
+
+.upgrade-node-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.upgrade-node {
+  position: absolute;
+  display: grid;
+  width: 124px;
+  height: 124px;
+  place-content: center;
+  gap: 3px;
+  padding: 12px;
+  border: 4px solid rgba(92, 107, 87, 0.24);
+  border-radius: 50%;
+  background: #e8e5da;
+  color: #687263;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0.68;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 8px 22px rgba(55, 80, 43, 0.12);
+}
+
+.upgrade-node.is-available {
+  border-color: #568f43;
+  background: #f4f8e9;
+  color: #293623;
+  opacity: 1;
+}
+
+.upgrade-node.is-purchased {
+  border-color: #f5ca55;
+  background: #fff3b8;
+  color: #293623;
+  opacity: 1;
+}
+
+.upgrade-node.is-selected {
+  outline: 4px solid rgba(56, 102, 65, 0.35);
+  outline-offset: 4px;
+}
+
+.upgrade-node:focus-visible {
+  outline: 4px solid #386641;
+  outline-offset: 5px;
+}
+
+.upgrade-node-icon {
+  font-size: 1.7rem;
+}
+
+.upgrade-node-title {
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.upgrade-node-cost {
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.upgrade-details {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid rgba(56, 102, 65, 0.14);
+  border-radius: 18px;
+  background: rgba(246, 240, 223, 0.7);
+}
+
+.upgrade-detail-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 17px;
+  background: rgba(245, 202, 85, 0.35);
+  font-size: 1.8rem;
+}
+
+.upgrade-details h3,
+.upgrade-details p {
+  margin-bottom: 3px;
+}
+
+#upgrade-detail-requirement {
+  color: #568f43;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.upgrade-details button {
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 999px;
+  background: #386641;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.upgrade-details button:disabled {
+  background: #a8afa4;
+  cursor: default;
+}
+
+.upgrade-details button:focus-visible {
+  outline: 3px solid #386641;
+  outline-offset: 3px;
+}
+
 .debug-panel {
   min-height: 360px;
   padding: 28px;
@@ -705,6 +895,18 @@ h1 {
   .achievement-state {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .upgrades-panel {
+    padding: 18px 12px;
+  }
+
+  .upgrade-details {
+    grid-template-columns: auto 1fr;
+  }
+
+  .upgrade-details button {
+    grid-column: 1 / -1;
   }
 
   .debug-level-form > div {

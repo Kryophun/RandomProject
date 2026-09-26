@@ -56,6 +56,17 @@
           Achievements
         </button>
         <button
+          id="upgrades-tab"
+          class="tab-button"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="upgrades-panel"
+          data-tab="upgrades"
+        >
+          Upgrades
+        </button>
+        <button
           id="debug-tab"
           class="tab-button debug-tab"
           type="button"
@@ -241,6 +252,60 @@
           <p id="achievement-summary">0 of 7 unlocked</p>
         </div>
         <div id="achievement-list" class="achievement-list"></div>
+      </section>
+
+      <section
+        id="upgrades-panel"
+        class="tab-panel upgrades-panel"
+        role="tabpanel"
+        aria-labelledby="upgrades-tab"
+        hidden
+      >
+        <div class="upgrades-heading">
+          <div>
+            <p class="eyebrow">Permanent progression</p>
+            <h2>Upgrade tree</h2>
+          </div>
+          <div class="upgrade-points" aria-label="Available upgrade points">
+            <span>Points</span>
+            <strong id="upgrade-points">0</strong>
+          </div>
+        </div>
+        <p class="upgrade-formula">
+          Run points = apples + (enemies × 3) + (bosses × 10) + (rainbow
+          apples × 2), multiplied by 1 + (completed levels ÷ 10).
+        </p>
+        <div class="upgrade-tree-scroll">
+          <div id="upgrade-tree" class="upgrade-tree">
+            <svg
+              class="upgrade-connectors"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <line x1="50" y1="16" x2="30" y2="48"></line>
+              <line x1="50" y1="16" x2="70" y2="48"></line>
+              <line x1="30" y1="48" x2="12.5" y2="82"></line>
+              <line x1="30" y1="48" x2="37.5" y2="82"></line>
+              <line x1="70" y1="48" x2="62.5" y2="82"></line>
+              <line x1="70" y1="48" x2="87.5" y2="82"></line>
+            </svg>
+            <div id="upgrade-node-layer" class="upgrade-node-layer"></div>
+          </div>
+        </div>
+        <article id="upgrade-details" class="upgrade-details">
+          <span id="upgrade-detail-icon" class="upgrade-detail-icon">🌱</span>
+          <div>
+            <h3 id="upgrade-detail-title">Calm Roots</h3>
+            <p id="upgrade-detail-description">
+              All movement intervals are 12% slower.
+            </p>
+            <p id="upgrade-detail-requirement"></p>
+          </div>
+          <button id="purchase-upgrade" type="button">
+            Purchase for 10
+          </button>
+        </article>
       </section>
 
       <section

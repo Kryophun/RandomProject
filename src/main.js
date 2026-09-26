@@ -23,6 +23,15 @@ import {
 } from "./input/controls.js";
 import { renderGame } from "./render/canvasRenderer.js";
 import { readHighScore, writeHighScore } from "./storage/highScore.js";
+import {
+  UPGRADES,
+  calculateRunUpgradePoints,
+  getUpgradeEffects,
+  isUpgradeAvailable,
+  purchaseUpgrade,
+  readUpgradeProgress,
+  writeUpgradeProgress,
+} from "./upgrades/upgrades.js";
 
 const canvas = document.querySelector("#game-board");
 const context = canvas.getContext("2d");
@@ -61,6 +70,18 @@ const directionButtons = document.querySelectorAll("[data-direction]");
 const tabButtons = document.querySelectorAll("[data-tab]");
 const gamePanel = document.querySelector("#game-panel");
 const achievementsPanel = document.querySelector("#achievements-panel");
+const upgradesPanel = document.querySelector("#upgrades-panel");
+const upgradePointsDisplay = document.querySelector("#upgrade-points");
+const upgradeNodeLayer = document.querySelector("#upgrade-node-layer");
+const upgradeDetailIcon = document.querySelector("#upgrade-detail-icon");
+const upgradeDetailTitle = document.querySelector("#upgrade-detail-title");
+const upgradeDetailDescription = document.querySelector(
+  "#upgrade-detail-description",
+);
+const upgradeDetailRequirement = document.querySelector(
+  "#upgrade-detail-requirement",
+);
+const purchaseUpgradeButton = document.querySelector("#purchase-upgrade");
 const debugPanel = document.querySelector("#debug-panel");
 const debugTab = document.querySelector("#debug-tab");
 const debugLevelForm = document.querySelector("#debug-level-form");
@@ -83,6 +104,9 @@ let pointerStart = null;
 let notificationTimerId = null;
 let unlockedAchievementIds = readUnlockedAchievements();
 let debugSequence = "";
+let upgradeProgress = readUpgradeProgress();
+let upgradeEffects = getUpgradeEffects(upgradeProgress.purchased);
+let selectedUpgradeId = UPGRADES[0].id;
 
 function stopTimer() {
   if (timerId !== null) {
@@ -100,7 +124,11 @@ function stopCountdownTimer() {
 
 function scheduleTick() {
   stopTimer();
-  timerId = window.setTimeout(runTick, getTickInterval(state.score));
+  const interval = Math.round(
+    getTickInterval(state.score) *
+      (state.upgrades?.tickIntervalMultiplier ?? 1),
+  );
+  timerId = window.setTimeout(runTick, interval);
 }
 
 function scheduleCountdownTick() {
@@ -146,18 +174,23 @@ function renderAchievements() {
     `${unlocked.size} of ${ACHIEVEMENTS.length} unlocked`;
 }
 
-function showAchievementNotification(achievement) {
+function showNotification(text) {
   if (notificationTimerId !== null) {
     window.clearTimeout(notificationTimerId);
   }
 
-  achievementNotification.textContent =
-    `${achievement.icon} Achievement unlocked: ${achievement.title}`;
+  achievementNotification.textContent = text;
   achievementNotification.hidden = false;
   notificationTimerId = window.setTimeout(() => {
     achievementNotification.hidden = true;
     notificationTimerId = null;
   }, 4_000);
+}
+
+function showAchievementNotification(achievement) {
+  showNotification(
+    `${achievement.icon} Achievement unlocked: ${achievement.title}`,
+  );
 }
 
 function updateAchievements() {
@@ -177,7 +210,145 @@ function updateAchievements() {
   showAchievementNotification(result.newlyUnlocked.at(-1));
 }
 
+function selectedUpgrade() {
+  return UPGRADES.find((upgrade) => upgrade.id === selectedUpgradeId);
+}
+
+function renderUpgradeDetails() {
+  const upgrade = selectedUpgrade();
+  const purchased = upgradeProgress.purchased.includes(upgrade.id);
+  const available = isUpgradeAvailable(
+    upgrade,
+    upgradeProgress.purchased,
+  );
+  const prerequisites = upgrade.prerequisites
+    .map(
+      (id) =>
+        UPGRADES.find((candidate) => candidate.id === id)?.title,
+    )
+    .filter(Boolean);
+
+  upgradeDetailIcon.textContent = upgrade.icon;
+  upgradeDetailTitle.textContent = upgrade.title;
+  upgradeDetailDescription.textContent = upgrade.description;
+  upgradeDetailRequirement.textContent = purchased
+    ? "Purchased"
+    : available
+      ? "Available to purchase"
+      : `Requires ${prerequisites.join(" and ")}`;
+  purchaseUpgradeButton.disabled =
+    purchased || !available || upgradeProgress.points < upgrade.cost;
+  purchaseUpgradeButton.textContent = purchased
+    ? "Purchased"
+    : `Purchase for ${upgrade.cost}`;
+}
+
+function renderUpgradeTree() {
+  const positions = new Map([
+    ["calm-roots", [50, 15]],
+    ["orchard-wisdom", [30, 48]],
+    ["boss-training", [70, 48]],
+    ["rainbow-reservoir", [12.5, 82]],
+    ["hunter-bounty", [37.5, 82]],
+    ["heavy-spit", [62.5, 82]],
+    ["deep-pockets", [87.5, 82]],
+  ]);
+  const nodes = UPGRADES.map((upgrade) => {
+    const button = document.createElement("button");
+    const icon = document.createElement("span");
+    const title = document.createElement("span");
+    const cost = document.createElement("span");
+    const purchased = upgradeProgress.purchased.includes(upgrade.id);
+    const available = isUpgradeAvailable(
+      upgrade,
+      upgradeProgress.purchased,
+    );
+    const [x, y] = positions.get(upgrade.id);
+
+    button.type = "button";
+    button.className = [
+      "upgrade-node",
+      purchased ? "is-purchased" : "",
+      available ? "is-available" : "",
+      !purchased && !available ? "is-locked" : "",
+      selectedUpgradeId === upgrade.id ? "is-selected" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    button.style.left = `${x}%`;
+    button.style.top = `${y}%`;
+    button.setAttribute(
+      "aria-label",
+      `${upgrade.title}. ${upgrade.description} Cost ${upgrade.cost}. ${
+        purchased ? "Purchased." : available ? "Available." : "Locked."
+      }`,
+    );
+    icon.className = "upgrade-node-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = upgrade.icon;
+    title.className = "upgrade-node-title";
+    title.textContent = upgrade.title;
+    cost.className = "upgrade-node-cost";
+    cost.textContent = purchased ? "Owned" : `${upgrade.cost} pts`;
+    button.append(icon, title, cost);
+    button.addEventListener("click", () => {
+      selectedUpgradeId = upgrade.id;
+      renderUpgradeTree();
+    });
+    return button;
+  });
+
+  upgradePointsDisplay.textContent = String(upgradeProgress.points);
+  upgradeNodeLayer.replaceChildren(...nodes);
+  renderUpgradeDetails();
+}
+
+function buySelectedUpgrade() {
+  const upgrade = selectedUpgrade();
+  const result = purchaseUpgrade(upgradeProgress, upgrade.id);
+
+  if (!result.purchased) {
+    return;
+  }
+
+  upgradeProgress = result.progress;
+  upgradeEffects = getUpgradeEffects(upgradeProgress.purchased);
+  state = { ...state, upgrades: upgradeEffects };
+  writeUpgradeProgress(upgradeProgress);
+  renderUpgradeTree();
+  showNotification(`${upgrade.icon} Purchased ${upgrade.title}`);
+}
+
+function awardRunUpgradePoints() {
+  if (
+    state.lifecycle !== "game-over" ||
+    state.upgradePointsAwarded
+  ) {
+    return;
+  }
+
+  const earned = calculateRunUpgradePoints(state);
+  state = {
+    ...state,
+    upgradePointsAwarded: true,
+    lastUpgradePointsEarned: earned,
+  };
+
+  if (earned <= 0) {
+    return;
+  }
+
+  upgradeProgress = {
+    ...upgradeProgress,
+    points: upgradeProgress.points + earned,
+  };
+  writeUpgradeProgress(upgradeProgress);
+  renderUpgradeTree();
+  showNotification(`⬆️ Run complete: +${earned} upgrade points`);
+}
+
 function updateInterface() {
+  awardRunUpgradePoints();
   updateAchievements();
   updateHighScore();
   score.textContent = String(state.score);
@@ -285,8 +456,8 @@ function updateInterface() {
     );
   } else if (isGameOver) {
     message.textContent = state.completed
-      ? `Board complete! Final score: ${state.score}`
-      : `${isCampaign ? `Campaign ended on level ${state.level}. ` : ""}Final score: ${state.score}`;
+      ? `Board complete! Final score: ${state.score}. Upgrade points earned: ${state.lastUpgradePointsEarned}.`
+      : `${isCampaign ? `Campaign ended on level ${state.level}. ` : ""}Final score: ${state.score}. Upgrade points earned: ${state.lastUpgradePointsEarned}.`;
     primaryAction.textContent = "Play again";
     status.textContent = state.completed ? "Board complete" : "Game over";
     canvas.setAttribute(
@@ -360,7 +531,11 @@ function beginGame() {
   const gameMode = document.querySelector(
     'input[name="game-mode"]:checked',
   ).value;
-  state = createGameState({ edgeMode, gameMode });
+  state = createGameState({
+    edgeMode,
+    gameMode,
+    upgrades: upgradeEffects,
+  });
   startLevelCountdown();
 }
 
@@ -421,6 +596,7 @@ function resizeCanvas() {
 function selectTab(tabName) {
   const showGame = tabName === "game";
   const showAchievements = tabName === "achievements";
+  const showUpgrades = tabName === "upgrades";
   const showDebug = tabName === "debug";
 
   if (!showGame && state.lifecycle === "running") {
@@ -433,6 +609,7 @@ function selectTab(tabName) {
 
   gamePanel.hidden = !showGame;
   achievementsPanel.hidden = !showAchievements;
+  upgradesPanel.hidden = !showUpgrades;
   debugPanel.hidden = !showDebug;
 
   tabButtons.forEach((button) => {
@@ -511,6 +688,7 @@ function jumpToCampaignLevel(event) {
     gameMode: "campaign",
     level,
     debugMode: true,
+    upgrades: upgradeEffects,
   });
   debugStatus.textContent = `Starting debug Campaign Level ${level}.`;
   selectTab("game");
@@ -573,6 +751,7 @@ window.addEventListener("keydown", (event) => {
 
 debugLevelForm.addEventListener("submit", jumpToCampaignLevel);
 secretCommandInput.addEventListener("input", handleSecretCommandInput);
+purchaseUpgradeButton.addEventListener("click", buySelectedUpgrade);
 
 directionButtons.forEach((button) => {
   button.addEventListener("click", () => {
@@ -619,5 +798,6 @@ const resizeObserver = new ResizeObserver(resizeCanvas);
 resizeObserver.observe(boardWrap);
 
 renderAchievements();
+renderUpgradeTree();
 updateInterface();
 requestAnimationFrame(resizeCanvas);
